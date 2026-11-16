@@ -915,7 +915,27 @@ tbody tr:hover{background:#fff8ef}
 .official-wiki-tip a:hover{color:#6d683b}
 
  .fixed-source{display:inline-block;padding:6px 10px;border-radius:8px;background:#f1eee8;color:#80624e;font-size:11px;font-weight:700}\n.ingredient-icon{vertical-align:middle}.crop-icon,.ingredient-icon{filter:drop-shadow(0 1px 1px rgba(90,65,45,.08))}.ingredient-name{display:flex;align-items:center;gap:8px;min-width:150px}.ingredient-name .sub{margin-top:3px}
-.unit-warning{display:inline-block;color:#a34b32;font-size:12px;font-weight:700;line-height:1.55;max-width:340px;white-space:normal;padding:5px 8px;background:#fff2ec;border-radius:7px}\n</style>
+.unit-warning{display:inline-block;color:#a34b32;font-size:12px;font-weight:700;line-height:1.55;max-width:340px;white-space:normal;padding:5px 8px;background:#fff2ec;border-radius:7px}\n
+/* Character-driven interactive server tips */
+.character-tip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:12px 0 0}
+.character-tip{appearance:none;border:1px solid #f0d9d9;background:linear-gradient(160deg,#fffdfb,#fff4f1);border-radius:17px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#654b4b;cursor:pointer;min-width:0;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.character-tip img{width:76px;height:76px;object-fit:contain;border-radius:50%;image-rendering:auto;filter:drop-shadow(0 2px 2px rgba(80,50,50,.1))}
+.character-tip span{font-size:12px;font-weight:850}
+.character-tip small{font-size:10px;color:#9b7d7a;text-align:center;line-height:1.35}
+.character-tip:hover,.character-tip:focus-visible{transform:translateY(-3px);box-shadow:0 7px 17px rgba(139,88,95,.13);outline:none;border-color:#dbaab4}
+.character-tip[aria-expanded="true"]{border-color:#c77c91;background:linear-gradient(160deg,#fff5f5,#fce8ed);box-shadow:0 5px 16px rgba(139,88,95,.12)}
+.character-tip:nth-child(2),.character-tip:nth-child(6){background:linear-gradient(160deg,#fff,#f2f4ff);border-color:#dce0f2}
+.character-tip:nth-child(3),.character-tip:nth-child(7){background:linear-gradient(160deg,#fffdf8,#fff0df);border-color:#f0dfc5}
+.character-tip:nth-child(5){background:linear-gradient(160deg,#fffef6,#fff6d9);border-color:#f1e4b5}
+.character-tip-bubble{position:relative;margin:13px 2px 0;padding:14px 16px 15px;border:1px solid #e9c8c8;border-radius:17px;background:linear-gradient(145deg,#fffafa,#fff1f2);box-shadow:0 5px 16px rgba(105,70,70,.07);animation:hamzzi-enter .2s ease both}
+.character-tip-bubble:before{content:"";position:absolute;top:-8px;left:var(--bubble-arrow,12%);width:14px;height:14px;background:#fffafa;border-left:1px solid #e9c8c8;border-top:1px solid #e9c8c8;transform:rotate(45deg)}
+.tip-bubble-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#81565f;font-size:13px;font-weight:850}
+.tip-bubble-heading button{border:0;background:#f6e3e5;color:#946a70;border-radius:50%;width:25px;height:25px;font-size:18px;line-height:1;cursor:pointer}
+.character-tip-bubble p{margin:7px 0 0;color:#786766;font-size:12px;line-height:1.8;word-break:keep-all}
+@media(max-width:680px){.character-tip-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.character-tip{padding:8px 5px}.character-tip img{width:68px;height:68px}.character-tip small{font-size:9px}}
+@media(max-width:360px){.character-tip-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+</style>
 </head>
 <body>
 <header>
@@ -946,13 +966,21 @@ tbody tr:hover{background:#fff8ef}
     <div class="usage-tip"><b>3. 변경사항 적용</b><span>가격이나 설정을 입력하면 입력 중인 내용이 자동으로 임시 저장되어 새로고침해도 유지됩니다. 변경사항 저장을 누르면 가공 재료 단가와 요리 수익 계산에 최종 반영됩니다.</span></div>
     <div class="usage-tip"><b>4. 자주 보는 요리 고정</b><span>요리 수익 계산에서 별표를 누르면 최대 4개까지 이 대시보드에 모아 볼 수 있어요.</span></div>
    </div>
-   <h3 class="tips-subtitle">TIP</h3>
-   <p class="official-wiki-tip">정확한 정보는 <a href="https://wiki.hamzzihouse.kr/" target="_blank" rel="noopener noreferrer">서버 공식 위키</a>와 인게임에서 확인해주세요.</p>
-   <ul class="server-tip-list">
-    <li><b>소금 만들기</b> : 물 양동이를 화로에서 구우면 소금 6개가 나와요. 단, 소금으로 가공되면 철 양동이는 사라집니다.</li>
-    <li><b>요리재료 2배 드롭 확률</b> : 식칼 아이템 설명에서 확률을 확인할 수 있어요. 이 확률은 생선과 농작물 재료에 공통으로 적용돼요.</li>
-    <li><b>생선 손질</b> : 생선 1마리를 손질하면 기본적으로 생선살 2개를 얻을 수 있어요. 요리재료 2배 드롭 확률에 따라 기대 생산량이 달라져요.</li>
-   </ul>
+      <h3 class="tips-subtitle">🐹 캐릭터가 알려주는 서버 TIP</h3>
+   <p class="official-wiki-tip">궁금한 캐릭터를 눌러 꿀팁을 확인해 보세요! 정확한 정보는 <a href="https://wiki.hamzzihouse.kr/" target="_blank" rel="noopener noreferrer">서버 공식 위키</a>와 인게임에서 확인해주세요.</p>
+   <div class="character-tip-grid" id="characterTipGrid" aria-label="캐릭터별 서버 꿀팁">
+    <button class="character-tip" type="button" data-tip="0" aria-expanded="false"><img src="data:image/webp;base64,UklGRgwEAABXRUJQVlA4IAAEAABQFACdASpIAEgAPxl8sVIsqCSirhi62ZAjCWQAypnXvLW2Yp5fNxlfOdXHavxvP3/W62e6/BzMsy/85U6SxiwzHMdOSSix8bOZeOPuxstn9VSh3EzMhjPyuXdbTR8TW+R8lVuyOfHcf0B7+yqWGh7X71VyBMD1G8rXwe2kxZEqPGviwE0D7DXh6IR2fbbJoUfkh0iNAN7WX4r658btC1BDz8OSqgYz7PDUXAAA/vuioG2yvO0+FY3XEQ96bhI1zIPXvvyJbW6f4ZnSxrv8+O2dAuWxw4FrUTlynQftPkiBpcFlixu/PHtZiuemRPEJVa/0bqg2kufEfOHId+PUxVeHSZ9pbVgjfy2L0ztTx3N33z3MWk214qElvl2vRNIqcBs2+1nuxkUgzhoogOwchEPyQw1WqluN/V0y+u9idn1wX+G0u8RxD3BMnD22oqp0a2+Ouyn2KySBnUMQH2YyzpRij48DEl1X+8wmj44M1z7H5tzAPw6POF8i3TaS+B3ZIS36xc/B8bRajjWE/ZJo6qRDPSgCFRVjdZ2ARGwWRcn80eqly1mSXqE2zvSzfYlJbBtZiii9X0IUjr3HcKDVWbNdS+ey3ezYR5njg/Lv6M3fa1LUTr6oVNtReXsUx4Pxpkzq6M3ttoAfEeTKY5zy41dy7NJrASGpwVsHXM0lfOT2t3anIV4hIQvc//ensNrKO2qDTPGkMEcCNvufK3PL0ZEObxZXm2KwmHxmBEqptP9/2HjaDVBX4syTnmWjA2hKzL5oDUFuV02pCTwTWYYG6mJ9pfbX2s/KyQXvki9fl7F7gUhv1bn4T3ciBD1DJk14phdHvkLw15JcD2uxkDP6lrylhNmqVY6c9gBveDFI2QUHhqOmAG/JAgm0fQAaE/q3zev02UhtyplMIJhYl8uxc00lp/3oZX4RJGPy2VtAX1eTJWpJIXvMYZcLzx761qsyaOxWP6KoQ+r41w+SSvYU2DjDXVTHK2/XStoPHz/BVDsyjx1/1h8E138R2DgHrSGJ2ZfUV8RWm6O+faqzC/8QLoc258O17z6WkBc+rR0WEwy+6bouUQ0OcHmlkzvVb3/9WkpdubC4cK/yQFznb/LtDTs9Iwh8glX0HqDNcoZxMuLoua6AV6ZyIAIP9V2R7cXyzhJJxjZcZyc/bzGeXI127WrnwiG9Mhgtl04wumvNTTja3sjzjqc5C/SjtSCRp4pUReM/i3S/zQrr811QdoUutzVWWFPe3mwSeAE1bq9oWG2NrkoLMi2AVH6xh3PWgWI/kjR6KZf+4188YNTvoKY62jDy3WXN5oBuY+RO6qb4W28ywgxbz8tT8sJtVkV5//3aGQ8gocea53SWTFSkyafDQAAA" alt="하리"><span>하리</span><small>소금 만들기</small></button>
+    <button class="character-tip" type="button" data-tip="1" aria-expanded="false"><img src="data:image/webp;base64,UklGRuIDAABXRUJQVlA4INYDAAAwEwCdASpIAEgAPw1wrlCsJqQisLieqYAhiWMAy273djS1FNxlxaVCal5PcQqyYBrXmod33/16iLxxiSuG4Ty5WNHbsD1N35UodhmPLftfcFzDHBAomPA6kppL5xO5rhP7acQb1O/MURsxYVZ0CQNFC0yEVeG9sSGlmR3rYmfPIoykcAySxNd1c1KjN9wCZPeUHdTS81qUO2L9lOAn0YIuNQAA/vfjWtpSjHJiFZ0vg7qTe6voY2N79tI1UpK3dYaXQtKuOmvfbSl6ZteHJUsdirdBxLSc+ZO4G8L1VgF7uXFAIxbNONDzuOvJzScA2JgQdwTCHkEMah4KFZKmvPoqtyREnoOHtIJN+bY10HvQ4/BW8p2sXpzCVexoYrH68A1jOpJ/syChlNzbZiwFeM0kJ/GIhh/nrDOTi3lNJC02F8vI/nXyeUp+L9vcHRJXnaz44iNvAnlZBaoCbjqcaflJArftwDo6IGUP5ws3iUvRhJvEkQy+tco3H0gfHP0axrrOJZJ2vGRy0Pxf1Y1c9R8lfLDPsxfz+sLlsf/td6U6uI2Gx/03aLOJRrKtlJpIm4ZeHjKREeIU3lKR8NieI/1K1//khk7iaRdNl2Ss7t8Q6u6r2ZDcFMf7BZnjMR0ndzC+dqnKrt7zPQ6OcHym5G+OkgG5Xt3vZ8teCiCwqQjTsmyCL2crd/QE1rBKzeB+wTL1TmNLuTE+MLpEoC41paTS4bq1wGO9tibXqSadrFtW49aMtOM1seknoR77La/GmC/9GHUtW5g+p8SLlY6DR7S2kOcJ4AmyCfEmMi/SXONRAzapbfGIBVIFbFDLmE/OHSsTXuHpebqo8tHk/PCfV/8Ntzzptc9vrCR4oY8Hgp9fnwkuudizlRFYhtFuwrRPYiiBdqDvmkpYGnNuqOEDxVR4h26QG6gCrqUSoBNFUG1qbLTJOTOM/b7742PKn5fhYKUi5wlMLV2vsQo9nQfKdOk6TtUNp9FwDtrBwfeZnxMUqrufAXSAo2QsSpzSu1/sF3vKnX363cpjPhom9TQQgDakTMuL5TL4uFVSadvUvMe6w7sFrY63r74MEqfnT+TFXj/677hCB1zqZIJqStNRgmxAx9mS+LddO11YNqKhg8Y73ct+MKXxBXBIonyapNQAx3c2fS590BP6IryYZReHJ28t+y1zPsU0B11RvuHB2vPJKTAoPbbOtsg3Ts+QKWZGqcB+wV2U/tXgL79KZdrMvTqkw1ES0ycb9cIfcmF++opsB7wdTyYbAtInrFw8J/OsbbHBKwU2Kn84JZxgvfjsnQGcxAkgYAAA" alt="몽은"><span>몽은</span><small>2배 드롭 확률</small></button>
+    <button class="character-tip" type="button" data-tip="2" aria-expanded="false"><img src="data:image/webp;base64,UklGRjgEAABXRUJQVlA4ICwEAADQFACdASpIAEgAPxFwrFCsJiQisfgOiYAiCWIAyLncicbNs4bmVY51cO+BdcCM/aJassVUaWlfwmlPd//RNWL+jE13/0fXYls68e/iYw3RfSS6DVtrA28pKKQI+tbCp5zfa4p1qiXm+WlHA6qZJMHlyZ3rgbe1rBOhPHcBwpYzF4sohdznjL4QBPlc49rxVEClx5nsqndcgjZ/xA9XYd1cmM2x9z8Pz2vxcwWwuLNAAP74rRFVhr51fH/BTA9H/vZDhIB9XNeb3WNoP5SH34NKYdm4sQZfAzOURUTnnPu97pdMc+vGtB1zTVnsDcn/y/BHUpYQaAQZ8Mh5RBNJNBWW90iIjBy9CWKU8RaU5QVxv27TGXL7W1JEvsBCBwVkEEaEmRSgjrsbU2bhJVM5SEO2wje4+BcV6j7eMQG0RunqrHb3C3oMzcpnoNxIE9KX/fVOqQDp7Vzv8s/p629rUkQ+0uGkVspySNrnyrHVZ7Dht8QxeQc5C3+4HmZ+2rlVsovimgvuMDAmgjJlQP9TyvE40B8wm1aYBck0a9HRMNlhpKDMwEbTrcmv4lWZXjwVapJBhXoJjfqIzWCj4kkq/rlDUmMY6rEUJj+FwVxlPR5fb9MO9VRIuKvDsWPqYTi55G0AdIJfnNLBL768gPNU5c9FxqwayI+ucwbjd02208vtgKxgXxA1twwI51aMHVwOm315/m99BV0Iiv1pYXwPgKvsSk7oJdeYPykj6MbeD+gy7ggHeDQ7fq9akfwB2ud8DVNgw80a1PdMJxBlwAGSCapqhpdQ6sIzw1MBHZV1fZiRD4VmUN/fR/17S5GSKuoxviFjmn2VGDMr+FRpCuVsNpiuOe8okVZIds2xokSx0RC/PG29qx8p7iiCcrc/x+89H5eoSuqJvChqrUC4MTaS30MsZd+cV2RcA8w+7Oq3Jzrok94LC+hwlLATN0ESNDEymQkH3scPlXDnRBse2eyzARsTX3++XSXX9qJy5oo3gcbCkDSQpogqulTemFq9zBsLDrkbSmlSA3J20L40F9NFSAsEnFDI+t8cLinb2hvNDzzWsz6yryo+eeTen3V2mPPTBdohdivB80zfp5mSscOFwrJxkTguALTD/c6qW3pxr6gexs5fVNhLPV9RfeOjPdFacGFT5Ms9eQvq/VMcw+ke+epqMzBOFRmDaVJJ9VVWrhLuMYuBYObh2ydAbYy9pnSJ1qvTGxpQq99sGg5hNfla5eTQNVGbX6y6l5MmalfVEeh7b2tRZJKngAfw79fezB7X8WRbIsOYLLJWtfjhihtwOOO25rwovvi0ttK+KgH5sZp51CE7g6s+JGo2M82ohgFzKaVsnalP8Yvi+rMf2FjdwKeg+aTnYf/7ISltl9wKErVooiAgIJBCXbNH3A0GoKaeNKAoJlF5tg7jLhAAAAA" alt="쿠리"><span>쿠리</span><small>생선 손질</small></button>
+    <button class="character-tip" type="button" data-tip="3" aria-expanded="false"><img src="data:image/webp;base64,UklGRl4DAABXRUJQVlA4IFIDAACQEQCdASpIAEgAPxV0r1CspqQisLYt+ZAiiUAY17a+Ndu3l5aV9ohFHMp3+qtOXk9uE0EXi+9rGBfpPjyU2xdTdDwK2TTNuYWkwwSzC9LF58s3v/C3BUxwCjG3HbHgvcQPzmfsl4wJ9ONlXJLfCN5hKI6qvd9aZlipH9G/3mRbGKPG1K4bRUbl3b1C/f8fk3iFOw6RkAD+9+KLkaOizPbIIeLivbQf1jxo6TGz5g/FSr8mUaUq8B3oBZXrhAgnO4KW4b8n4zWc8hDmDbnEpTyQ32ypHG7NjmQTBbKwuXBZgLZkLRZ5id4Zg56I7ppHA82U9x9yDK8n65VMfrutvYNqdc44SaRmdXO7xlIhxKsjFOK+BHYMIYaehRGK3wam9+rhyPY1xFE9X171aqUabAF9nAHWMyOAgJzqSXxcjp5SRRGEUj6xeYD57gi6iwpKlPN6dA9Wd1HLIkQ+zeKY1o6RlvRK2kGKrDZVp9HVnwEclM/CLe70GER1aCiR3dW7yEJg/K9IufpBnCRQZBxgNlUb4lvjAjR9fKgvAgn9s0gqqVLMbbs9GF6xF6N/dzGr3GHCEm2vE3rgT35no4kSNXgAXVMZLiMjwJapaetSBQ0ixxeTdKUcLJq2i8b+s7dzYEdPJRqYLcMH1ezDBCEDWWxvHtjkaXshkOa/5Xm4T+oRh5gc1auqiuP3E44kfwpCf7r6BOXDA7I3/xbYMqWDUc7D2BjLyQd7490iJerZ9VSFnO5W5N2cc0SQjcP+4Y/cKg0Aa361U28qh4+/Rw0Qoqx5eEMN0BqFX2K+ESxAT1QlVqlXr0fMAxrPYBv3AHD2YJc8IdOA9X6YVpvZBq5ia9hAwQZLbKvZ0WzbQouAGr752/6dx0ATaz32ix3qcX6DdkokKuQRLC9/UP/aB4Mk6c4zPpv9VLHYKQCbSuIlWl5+xDXKsmPN8JplfxTzf6eIJuhVW8rKNo3PEWjE4hjg4+LOqEijcizHpF+nm+QXk42bEUv294GzIxSfnsd6zpQ/OqMOAgRoiX0Lf0imhM13qurhemvWmWfzRDwszYSJ+LeSp6OSRc0tUm+jZr2Im37pElqUfKX4JgLzb56GbB69XZJgwCNGDHH3rHHPg7Ac41IAAAAA" alt="몽시"><span>몽시</span><small>예상 원가</small></button>
+    <button class="character-tip" type="button" data-tip="4" aria-expanded="false"><img src="data:image/webp;base64,UklGRr4DAABXRUJQVlA4ILIDAACwEgCdASpIAEgAPxV2sVCsp6Siq5queZAiiUAZHrcZNhTjObvKCd2Oa1ajdRT38IMRgE+5/nUHBYey/LxYIvOnjofFXQQC15lP84l16n71db7tHcmdTzMaNNVEJejPXz21Si3skTEJK4ztuIDkWmR8ejYy5Ba3vh3P78PR7VW0h4Y1gvCJt51XzVUbyuJ5QzF5wzF/KOa0LgxyrAOoAAD+9wCgwB8e5E5/wYpIn14ZJOZrs6rEUjwGmxu3ehpV/7akfRu3D8h4fiDpl+I0/JTQnNaY5eAEbxMI+4uHTqjkDpUmWEXA11xZ7dsI7EB5tA0jmldTHAS0/G5zYC7NSompB7MXjWDTrvpA/vvFA6Yw2N1UBvbFBYMlwY0LZx+/uqhFSh6kShhG8Hy/Zol+5WNVT9RYhmaJoBzF4j1De6QeaqHe287wPXOwo/wse8tmWjKc0RGYT4pI5Zbdz+AoiMjnSVydFWbdnJhdlkCjlfm+Carhw9bvQrWaYkCMXrPfjvQQ3EqAD+rS/zMP2Y38blnJ0CAF5V4x07LxkaL3Zut40hmdE0ij7FQA551DPJZvtfT+l4JtxeFiMaAs0j8x+ZCKuiZqzrzTklonOO9Dgn1hTVUEJIiBhu7okKnswkDZTnRjBsxwMtPOyhPEOm3JJPnUcNqQNs3NLXB7wutUmyjdxeT78h1slN+LzSJCiDvcnD2Qzey6g8I59jk43e2bnYolNhJ9yVF6dlk5crCfXjMZ6hR4POpWcd8kC4/ZwP6yBPdprpQlg6nptik0HZc5lnLZicngLMh9ngWB/kM9Pf47DJTiAHB5WMj6C634CLZjP0P9NCaAH1CtkBH+EKRi7RcjezsMpj8SwCiMnxbW8U5O11zlAcI1atDSRnyz2XcT3fCGSgiLC6qeFlpvefSV82p+bITq6XwwoyC/O+9tX0rTUVKHx9zn3AdpQGadgrl5LwbZKqb5wCnDH3ycFWmOQktqJGo+U2Zu8ycktuL5s4rlBqW3CnafORqfV+J50xoRtB/r9neAr2n5dgLkjZzQOa7QSjLVL2m3wE4l1jxj41BAJeVWyQ3lsZmVJEjAeAYS9JSm7caQFmfGwzDMG2J8RdJ/fHx4g2A/oSfHKbriT/iYWp0kCiWkry6exAiCjw7Su5KAQ51WOWF9F9pCGWe2B3Bs86If34ehTy0R3mWDUlFqDW9Pesm0MQ9uQWsSwCcSXBrDRi9RYKfaahilvrmcMzhBvtyGjNtZpqpgnGdCPoWFjLwA" alt="달"><span>달</span><small>요정 드롭 확률</small></button>
+    <button class="character-tip" type="button" data-tip="5" aria-expanded="false"><img src="data:image/webp;base64,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" alt="체다"><span>체다</span><small>농작물 포대</small></button>
+    <button class="character-tip" type="button" data-tip="6" aria-expanded="false"><img src="data:image/webp;base64,undefined" alt="츄"><span>츄</span><small>나만의 가격 설정</small></button>
+   </div>
+   <div class="character-tip-bubble" id="characterTipBubble" role="status" aria-live="polite" hidden>
+    <div class="tip-bubble-heading"><span id="tipBubbleName">하리</span><button type="button" id="tipBubbleClose" aria-label="말풍선 닫기">×</button></div>
+    <p id="tipBubbleText"></p>
+   </div>
   </div>
  </section>
  <section id="recipes" class="view hidden">
@@ -1465,6 +1493,37 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   <button type="button" class="hamzzi-notice-confirm" id="hamzziNoticeConfirm">✦ 확인</button>
  </section>
 </div>
+
+
+<script>
+(()=>{
+ const tips=[
+  {name:'하리의 소금 만들기 팁',text:'물 양동이를 화로에서 구우면 소금 6개를 얻을 수 있어! 단, 소금으로 가공되면 철 양동이는 사라지니까 참고해 줘.'},
+  {name:'몽은의 2배 드롭 확률 팁',text:'식칼 아이템 설명을 열어 요리재료 2배 드롭 확률을 확인해 봐! 이 확률은 생선과 농작물 재료에 공통으로 적용돼.'},
+  {name:'쿠리의 생선 손질 팁',text:'생선 1마리를 손질하면 기본적으로 생선살 2개를 얻을 수 있어! 2배 드롭 확률에 따라 기대 생산량이 달라진다는 것도 기억해 줘.'},
+  {name:'몽시의 예상 원가 팁',text:'2배 드롭은 개인별 손질 횟수와 성공 횟수에 따라 실제 획득량이 달라져. 계산기에 표시되는 원가는 설정 확률을 반영한 예상 원가라 실제 원가와 차이가 날 수 있어!'},
+  {name:'달의 요정 드롭 확률 팁',text:'요정의 드롭 확률이 궁금하다면 인게임에서 요정에게 커서를 올려 확인해 봐! 표시되는 확률을 참고하면 돼.'},
+  {name:'체다의 농작물 포대 팁',text:'포대 1개에는 농작물 9개가 들어가고, 1세트는 포대 64개야. 즉 농작물 1세트는 총 576개! 계산기에는 밀짚, 비트, 감자, 당근, 호박, 수박, 달콤한 열매, 코코아 콩, 사과, 사탕수수 포대가 등록되어 있어.'},
+  {name:'츄의 나만의 가격 설정 팁',text:'가격 관리에서 실제 거래하는 가격과 직접 채집·구매 여부를 설정해 봐! 변경한 가격은 가공 재료 단가와 요리 수익에 반영되고, 현재 사용 중인 브라우저에 저장돼.'}
+ ];
+ const grid=document.getElementById('characterTipGrid');
+ const bubble=document.getElementById('characterTipBubble');
+ if(!grid||!bubble)return;
+ const name=document.getElementById('tipBubbleName'),message=document.getElementById('tipBubbleText');
+ const close=()=>{bubble.hidden=true;grid.querySelectorAll('.character-tip').forEach(b=>b.setAttribute('aria-expanded','false'));};
+ grid.addEventListener('click',e=>{
+  const button=e.target.closest('.character-tip');if(!button)return;
+  const index=Number(button.dataset.tip);if(!Number.isInteger(index)||!tips[index])return;
+  const already=button.getAttribute('aria-expanded')==='true'&&!bubble.hidden;
+  close();if(already)return;
+  name.textContent=tips[index].name;message.textContent=tips[index].text;
+  button.setAttribute('aria-expanded','true');bubble.hidden=false;
+  const col=window.matchMedia('(max-width:680px)').matches?3:4;
+  const left=(index%col+.5)/col*100;bubble.style.setProperty('--bubble-arrow',Math.max(8,Math.min(88,left))+'%');
+ });
+ document.getElementById('tipBubbleClose')?.addEventListener('click',close);
+})();
+</script>
 
 </body>
 </html>

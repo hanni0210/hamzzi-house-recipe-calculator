@@ -1552,8 +1552,13 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   close();if(already)return;
   name.textContent=tips[index].name;message.textContent=tips[index].text;if(closeButton)closeButton.hidden=false;
   button.setAttribute('aria-expanded','true');bubble.hidden=false;
-  const col=window.matchMedia('(max-width:680px)').matches?3:4;
-  const left=(index%col+.5)/col*100;bubble.style.setProperty('--bubble-arrow',Math.max(8,Math.min(88,left))+'%');
+  // 말풍선 꼭지는 실제로 누른 캐릭터 카드의 중앙을 따라가도록 계산
+  const buttonRect=button.getBoundingClientRect();
+  const bubbleRect=bubble.getBoundingClientRect();
+  const arrowX=buttonRect.left+buttonRect.width/2-bubbleRect.left;
+  const arrowInset=18;
+  const arrowLeft=Math.max(arrowInset,Math.min(bubbleRect.width-arrowInset,arrowX));
+  bubble.style.setProperty('--bubble-arrow',arrowLeft+'px');
  });
  document.getElementById('tipBubbleClose')?.addEventListener('click',close);
 })();

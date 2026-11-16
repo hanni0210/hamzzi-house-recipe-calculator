@@ -919,7 +919,14 @@ tbody tr:hover{background:#fff8ef}
 /* Character-driven interactive server tips */
 .character-tip-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:12px 0 0}
 .character-tip{appearance:none;border:1px solid #f0d9d9;background:linear-gradient(160deg,#fffdfb,#fff4f1);border-radius:17px;padding:10px 7px 9px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#654b4b;cursor:pointer;min-width:0;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.character-tip img{width:76px;height:76px;object-fit:contain;border-radius:50%;image-rendering:auto;filter:drop-shadow(0 2px 2px rgba(80,50,50,.1))}
+.character-tip img{width:76px;height:76px;object-fit:cover;object-position:0% 50%;border-radius:50%;image-rendering:auto;filter:drop-shadow(0 2px 2px rgba(80,50,50,.1))}
+.character-tip:nth-child(1) img{object-position:0% 50%}
+.character-tip:nth-child(2) img{object-position:16.667% 50%}
+.character-tip:nth-child(3) img{object-position:33.333% 50%}
+.character-tip:nth-child(4) img{object-position:50% 50%}
+.character-tip:nth-child(5) img{object-position:66.667% 50%}
+.character-tip:nth-child(6) img{object-position:83.333% 50%}
+.character-tip:nth-child(7) img{object-position:100% 50%}
 .character-tip span{font-size:12px;font-weight:850}
 .character-tip small{font-size:10px;color:#9b7d7a;text-align:center;line-height:1.35}
 .character-tip:hover,.character-tip:focus-visible{transform:translateY(-3px);box-shadow:0 7px 17px rgba(139,88,95,.13);outline:none;border-color:#dbaab4}

@@ -1206,8 +1206,8 @@ const recipes=[
  {id:'pancake',name:'팬케이크',sale:70,ingredients:[['flour',1],['sugar',1],['honey',1]]},
  {id:'soup',name:'채소 수프',sale:125,ingredients:[['carrot',1],['potato',1],['salt',1],['water',1]]},
  {id:'dong',name:'동그랑땡',sale:241,ingredients:[['fish',1],['salt',1],['flour',1]]},
- {id:'fruitjuice',name:'과일 주스',sale:null,ingredients:[['fruitmix',1],['water',1],['sugar',1]]},
- {id:'fruitice',name:'과일 빙수',sale:null,ingredients:[['fruitmix',1],['ice',1],['jam',1]]}
+ {id:'fruitjuice',name:'과일 주스',sale:112,ingredients:[['fruitmix',1],['water',1],['sugar',1]]},
+ {id:'fruitice',name:'과일 빙수',sale:108,ingredients:[['fruitmix',1],['ice',1],['jam',1]]}
 ];
 const $=s=>document.querySelector(s), money=n=>n==null?'미등록':Math.round(n).toLocaleString('ko-KR')+'원', dec=n=>n==null?'미등록':Math.round(n).toLocaleString('ko-KR')+'원', pct=n=>n==null?'—':n.toFixed(2)+'%';
 let overrides=JSON.parse(localStorage.getItem('econOverrides')||'{}');

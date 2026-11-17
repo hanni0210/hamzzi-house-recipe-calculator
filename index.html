@@ -1056,11 +1056,11 @@ tbody tr:hover{background:#fff8ef}
   <div class="callout bulk-intro">1세트는 64개, 1셜커는 1,728개 기준입니다. 재료 구매 원가는 가격 관리의 내 구매가·조달 방식과 연동됩니다. 직접 채집 재료는 구매 비용 0원으로 계산됩니다.</div>
   <div class="panel bulk-panel" id="bulkRecipePanel">
    <h3>🍳 요리 가공 판매</h3>
-   <p class="sub">요리를 선택하고 각 재료를 구매할 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다.</p>
+   <p class="sub">요리를 선택하고 재료별 조달 방식과 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다. 직접 수급한 재료는 구매 비용 0원으로 처리됩니다.</p>
    <div class="field bulk-recipe-select"><label for="bulkRecipeSelect">제작할 요리</label><select id="bulkRecipeSelect"></select></div>
-   <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>필요 재료</th><th>구매 단위</th><th>구매 수량</th><th>예상 구매 비용</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
+   <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>필요 재료</th><th>조달 방식</th><th>구매 단위</th><th>수량</th><th>예상 구매 비용</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
    <div class="bulk-results" id="bulkRecipeResults" aria-live="polite"></div>
-   <p class="sub bulk-footnote">※ 구매한 재료 전체의 비용을 차감해 계산합니다. 제작 후 남은 재료는 재고로 남으며, 남은 재료의 가치는 순수익에 별도로 더하지 않습니다. 2배 드롭이 적용되는 재료는 가격 관리의 확률을 반영한 예상 원가를 사용합니다.</p>
+   <p class="sub bulk-footnote">※ 구매로 조달한 재료만 구매 비용에 포함하고, 직접 수급한 재료는 0원으로 계산합니다. 구매한 재료 전체의 비용을 차감해 계산합니다. 제작 후 남은 재료는 재고로 남으며, 남은 재료의 가치는 순수익에 별도로 더하지 않습니다. 2배 드롭이 적용되는 재료는 가격 관리의 확률을 반영한 예상 원가를 사용합니다.</p>
   </div>
  </section>
  <section id="prices" class="view hidden">
@@ -1740,9 +1740,8 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   if(!recipe)return;
   const needs=flatten(recipe);
   rows.innerHTML=Object.entries(needs).map(([id,qty])=>{
-   const cost=itemPrice(id);
-   const costLabel=cost==null?'가격 미등록':number(cost*qty)+'원 / 요리 1개';
-   return '<tr><td>'+itemName(id)+' <small>('+number(qty)+'개 / 요리 1개)</small></td><td><select class="bulk-buy-unit" data-item="'+id+'">'+unitOptions+'</select></td><td><input class="bulk-buy-qty" data-item="'+id+'" type="number" min="0" step="1" value="1" aria-label="'+itemName(id)+' 구매 수량"></td><td>'+costLabel+'</td></tr>';
+   const source=procurementSourceForItem(id)==='구매'?'구매':'직접 채집';
+   return '<tr><td>'+itemName(id)+' <small>('+number(qty)+'개 / 요리 1개)</small></td><td><select class="bulk-buy-source" data-item="'+id+'" aria-label="'+itemName(id)+' 조달 방식"><option value="구매" '+(source==='구매'?'selected':'')+'>구매</option><option value="직접 채집" '+(source==='직접 채집'?'selected':'')+'>직접 수급</option></select></td><td><select class="bulk-buy-unit" data-item="'+id+'">'+unitOptions+'</select></td><td><input class="bulk-buy-qty" data-item="'+id+'" type="number" min="0" step="1" value="1" aria-label="'+itemName(id)+' 수량"></td><td class="bulk-cost-cell" data-item="'+id+'">계산 중</td></tr>';
   }).join('');
   calculate();
  };
@@ -1756,7 +1755,10 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
    const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0)));
    const available=unit*qty;
    max=Math.min(max,Math.floor(available/perRecipe));
-   const price=itemPrice(id);
+   const source=rows.querySelector('.bulk-buy-source[data-item="'+id+'"]')?.value||'구매';
+   const price=source==='직접 채집'?0:itemPrice(id);
+   const costCell=rows.querySelector('.bulk-cost-cell[data-item="'+id+'"]');
+   if(costCell)costCell.textContent=source==='직접 채집'?'0원 (직접 수급)':(price==null?'가격 미등록':number(price*available)+'원');
    if(price==null)unpriced.push(itemName(id)); else totalCost+=available*price;
   }
   if(!Number.isFinite(max))max=0;

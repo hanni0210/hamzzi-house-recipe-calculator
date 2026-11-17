@@ -1100,13 +1100,38 @@ tbody tr:hover{background:#fff8ef}
  <footer>서버 경제 계산기 · 초기 가격은 사이트 제작자가 생각하는 거래가를 기준으로 입력했습니다.<br>서버를 즐기는 개인이 만든 사이트이며, 서버 공식 사이트가 아닙니다. 문의나 건의사항은 디스코드 hanni_2108로 부탁드립니다.</footer>
 </main>
 <script>
+const hamzziMascotImageCache=new Map();
+let hamzziMascotRequest=0;
+function setHamzziNoticeMascot(mascot,src){
+ const request=++hamzziMascotRequest;
+ mascot.style.visibility='hidden';
+ mascot.removeAttribute('src');
+ let loading=hamzziMascotImageCache.get(src);
+ if(!loading){
+  loading=new Promise((resolve,reject)=>{
+   const image=new Image();
+   image.onload=()=>resolve(src);
+   image.onerror=reject;
+   image.src=src;
+  });
+  hamzziMascotImageCache.set(src,loading);
+  loading.catch(()=>hamzziMascotImageCache.delete(src));
+ }
+ loading.then(()=>{
+  if(request!==hamzziMascotRequest)return;
+  mascot.src=src;
+  mascot.style.visibility='visible';
+ }).catch(()=>{
+  if(request===hamzziMascotRequest)mascot.style.visibility='hidden';
+ });
+}
 function showHamzziNotice(title,message,kicker='HAMZZI HOUSE',kind='info'){
  const modal=document.getElementById('hamzziNotice');
  if(!modal)return;
  document.getElementById('hamzziNoticeTitle').textContent=title;
  document.getElementById('hamzziNoticeMessage').textContent=message;
  document.getElementById('hamzziNoticeKicker').textContent=kicker;
- const mascot=document.getElementById('hamzziNoticeMascot');if(mascot){const nextSrc=kind==='question'?'assets/hamster-question.webp?v=1':kind==='bulk-save'?'assets/hamster-notice.webp?v=20261117-transparent2':'assets/hamster-exclamation.webp?v=1';mascot.style.opacity='0';mascot.onload=()=>{mascot.style.opacity='1';};mascot.onerror=()=>{mascot.style.opacity='1';};mascot.src=nextSrc;if(mascot.complete&&mascot.naturalWidth>0)mascot.style.opacity='1';}
+ const mascot=document.getElementById('hamzziNoticeMascot');if(mascot){const nextSrc=kind==='question'?'assets/hamster-question.webp?v=1':kind==='bulk-save'?'assets/hamster-notice.webp?v=20261117-transparent2':'assets/hamster-exclamation.webp?v=1';setHamzziNoticeMascot(mascot,nextSrc);}
  const cancel=document.getElementById('hamzziNoticeCancel');
  if(cancel)cancel.hidden=true;
  const confirmBtn=document.getElementById('hamzziNoticeConfirm');

@@ -1633,7 +1633,7 @@ const bulkFlatten=(recipe,qty,out,stack)=>{
 };
 const bulkRecipeNeeds=recipe=>bulkFlatten(recipe,1,{},[recipe.id]);
 const bulkDefaultSource=item=>item.kind==='crop'?cropProcurement(cropPacks[item.index][0],item.index):item.kind==='fish'||item.kind==='iron'?procurementSourceForItem(item.kind==='fish'?'fish':'salt'):item.kind==='direct'?procurementSourceForItem(item.id):'구매';
-const bulkUnitOptions=(item)=>item.kind==='crop'?'<option value="64">1세트 (64포대)</option><option value="1728" selected>1셜커 (1,728포대)</option>':item.kind==='fruit'?'<option value="576">1세트 (576개)</option><option value="15552" selected>1셜커 (15,552개)</option>':'<option value="64">1세트 (64개)</option><option value="1728" selected>1셜커 (1,728개)</option>';
+const bulkUnitOptions=(item,unit)=>item.kind==='crop'?'<option value="64" '+(unit===64?'selected':'')+'>1세트 (64포대)</option><option value="1728" '+(unit===1728?'selected':'')+'>1셜커 (1,728포대)</option>':item.kind==='fruit'?'<option value="576" '+(unit===576?'selected':'')+'>1세트 (576개)</option><option value="15552" '+(unit===15552?'selected':'')+'>1셜커 (15,552개)</option>':'<option value="64" '+(unit===64?'selected':'')+'>1세트 (64개)</option><option value="1728" '+(unit===1728?'selected':'')+'>1셜커 (1,728개)</option>';
 const bulkUnitPrice=item=>{
  if(item.kind==='crop')return effectiveCropSetPrice(item.index)/64;
  if(item.kind==='fish')return fishShulkerPrice/1728;
@@ -1655,7 +1655,7 @@ if(bulkRows&&bulkRecipeSelect&&bulkRecipeRows&&bulkResults){
  bulkRecipeSelect.innerHTML=recipes.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');
  bulkRecipeSelect.value=recipes[0]?recipes[0].id:'';
  const bulkRenderRaw=()=>{
-  bulkRows.innerHTML=BULK_RAW_ITEMS.map(item=>{const v=bulkRead(item),unitPrice=bulkUnitPrice(item);return '<tr><td><b>'+item.label+'</b><small style="display:block;color:var(--muted)">'+bulkName[item.out]+' 생산</small></td><td><select data-bulk-source="'+item.id+'"><option value="구매" '+(v.source==='구매'?'selected':'')+'>구매</option><option value="직접 수급" '+(v.source!=='구매'?'selected':'')+'>직접 수급</option></select></td><td><select data-bulk-unit="'+item.id+'">'+bulkUnitOptions(item).replace('value="'+v.unit+'"','value="'+v.unit+'" selected')+'</select></td><td><input type="number" min="0" step="1" value="'+v.qty+'" data-bulk-qty="'+item.id+'"></td><td data-bulk-yield="'+item.id+'">-</td><td data-bulk-cost="'+item.id+'">'+(v.source!=='구매'?'0원':bulkMoney(unitPrice==null?null:unitPrice*v.unit*v.qty))+'</td></tr>';}).join('');
+  bulkRows.innerHTML=BULK_RAW_ITEMS.map(item=>{const v=bulkRead(item),unitPrice=bulkUnitPrice(item);return '<tr><td><b>'+item.label+'</b><small style="display:block;color:var(--muted)">'+bulkName[item.out]+' 생산</small></td><td><select data-bulk-source="'+item.id+'"><option value="구매" '+(v.source==='구매'?'selected':'')+'>구매</option><option value="직접 수급" '+(v.source!=='구매'?'selected':'')+'>직접 수급</option></select></td><td><select data-bulk-unit="'+item.id+'">'+bulkUnitOptions(item,v.unit)+'</select></td><td><input type="number" min="0" step="1" value="'+v.qty+'" data-bulk-qty="'+item.id+'"></td><td data-bulk-yield="'+item.id+'">-</td><td data-bulk-cost="'+item.id+'">'+(v.source!=='구매'?'0원':bulkMoney(unitPrice==null?null:unitPrice*v.unit*v.qty))+'</td></tr>';}).join('');
   bulkCalculate();
  };
  const bulkGetInput=item=>{const q=bulkRows.querySelector('[data-bulk-qty="'+item.id+'"]'),u=bulkRows.querySelector('[data-bulk-unit="'+item.id+'"]'),s=bulkRows.querySelector('[data-bulk-source="'+item.id+'"]');return {qty:Math.max(0,Math.floor(Number(q&&q.value)||0)),unit:Number(u&&u.value)||1728,source:s?s.value:'구매'};};
@@ -1703,43 +1703,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
 </div>
 
 
-<script>
-(()=>{
- const tips=[
-  {name:'하리의 소금 만들기 팁',text:'물 양동이를 화로에서 구우면 소금 6개를 얻을 수 있어! 단, 소금으로 가공되면 철 양동이는 사라지니까 참고해 줘.'},
-  {name:'몽은의 2배 드롭 확률 팁',text:'식칼 아이템 설명을 열어 요리재료 2배 드롭 확률을 확인해 봐! 이 확률은 생선과 농작물 재료에 공통으로 적용돼.'},
-  {name:'쿠리의 생선 손질 팁',text:'생선 1마리를 손질하면 기본적으로 생선살 2개를 얻을 수 있어! 2배 드롭 확률에 따라 기대 생산량이 달라진다는 것도 기억해 줘.'},
-  {name:'몽시의 예상 원가 팁',text:'2배 드롭은 개인별 손질 횟수와 성공 횟수에 따라 실제 획득량이 달라져. 계산기에 표시되는 원가는 설정 확률을 반영한 예상 원가라 실제 원가와 차이가 날 수 있어!'},
-  {name:'달의 요정 드롭 확률 팁',text:'요정의 드롭 확률이 궁금하다면 인게임에서 요정에게 커서를 올려 확인해 봐! 표시되는 확률을 참고하면 돼.'},
-  {name:'체다의 농작물 포대 팁',text:'포대 1개에는 농작물 9개가 들어가고, 1세트는 포대 64개야. 즉 농작물 1세트는 총 576개! 계산기에는 밀짚, 비트, 감자, 당근, 호박, 수박, 달콤한 열매, 코코아 콩, 사과, 사탕수수 포대가 등록되어 있어.'},
-  {name:'츄의 나만의 가격 설정 팁',t=
-   '<div class="bulk-result"><small>제작 가능 요리 수량</small><strong>'+number(max)+'개</strong></div>'+
-   '<div class="bulk-result"><small>예상 판매 매출</small><strong>'+number(revenue)+'원</strong></div>'+
-   '<div class="bulk-result"><small>재료 구매 비용</small><strong>'+number(totalCost)+'원</strong></div>'+
-   '<div class="bulk-result '+(profit>=0?'profit-result':'loss-result')+'"><small>예상 순수익</small><strong>'+number(profit)+'원</strong></div>'+
-   '<div class="bulk-result" style="grid-column:1/-1"><small>제작 후 남는 재료</small><div class="scroll"><table><tbody>'+remaining+'</tbody></table></div></div>'+
-   (unpriced.length?'<p class="sub" style="grid-column:1/-1;color:#b56b68">가격 미등록 재료: '+[...new Set(unpriced)].join(', ')+' · 미등록 재료는 0원으로 임시 계산했으니 가격 관리에서 확인해 주세요.</p>':'');
- };
- select.innerHTML=recipes.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');
- select.value=recipes[0]?.id||'';
- select.addEventListener('change',render);
- document.addEventListener('price-settings-saved',()=>{
-  const recipe=recipes.find(r=>r.id===select.value)||recipes[0];
-  if(!recipe)return;
-  const needs=flatten(recipe);
-  Object.keys(needs).forEach(id=>{
-   const cropIndex=cropIngredientMap[id];
-   const source=cropIndex!==undefined?cropProcurement(cropPacks[cropIndex][0],cropIndex):procurementSourceForItem(id);
-   const control=rows.querySelector('.bulk-buy-source[data-item="'+id+'"]');
-   if(control)control.value=source==='구매'?'구매':'직접 채집';
-  });
-  calculate();
- });
- rows.addEventListener('input',calculate);
- rows.addEventListener('change',calculate);
- render();
-})();
-</script>
+
 
 </body>
 </html>

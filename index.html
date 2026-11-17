@@ -1615,7 +1615,7 @@ let bulkDraft=JSON.parse(localStorage.getItem(BULK_DRAFT_KEY)||'{}');
 let bulkSelectedRecipe=null;
 const bulkDefault=(id)=>({source:procurementSourceForItem(id)==='구매'?'구매':'직접 수급',unitPrice:itemPrice(id)??0,unit:1728,qty:0});
 const bulkFmt=n=>n==null?'가격 확인 필요':Math.round(n).toLocaleString('ko-KR')+'원';
-function bulkCost(id){const row=bulkDraft[id]||bulkDefault(id);if(row.source==='직접 수급')return itemPrice(id)??0;return Math.max(0,Number(row.unitPrice)||0);}
+function bulkCost(id){const row=bulkDraft[id]||bulkDefault(id);if(row.source==='직접 수급')return 0;return Math.max(0,Number(row.unitPrice)||0);}
 function bulkInventoryRows(){
  $('#bulkInventoryRows').innerHTML=bulkIds.map(id=>{
   const row={...bulkDefault(id),...(bulkDraft[id]||{})}, stock=Math.max(0,Number(bulkStock[id]?.qty)||0),cost=Number(row.qty||0)*Number(row.unit||1728)*Number(row.unitPrice||0);
@@ -1655,7 +1655,11 @@ function openBulkRecipe(id){
  $('#bulkRecipeRanking').parentElement.classList.add('hidden');$('#bulkRecipeDetail').classList.remove('hidden');
  $('#bulkDetailTitle').textContent=r.name+' 대량 제작 상세';$('#bulkDetailSubtitle').textContent='현재 보유 재고 기준 단독 제작 가능 수량: '+possible.toLocaleString('ko-KR')+'개';
  $('#bulkDetailIngredients').innerHTML='<table class="price-table"><thead><tr><th>재료</th><th>필요 수량</th><th>현재 보유량</th><th>제작 후 잔여량</th><th>조달 기준</th></tr></thead><tbody>'+Object.entries(ing).map(([key,need])=>{const have=Math.max(0,Number(bulkStock[key]?.qty)||0),used=possible*need;return '<tr><td>'+itemName(key)+'</td><td>'+used.toLocaleString('ko-KR')+'개 ('+need+'/개)</td><td>'+have.toLocaleString('ko-KR')+'개</td><td>'+Math.max(0,have-used).toLocaleString('ko-KR')+'개</td><td>'+(bulkDraft[key]?.source||bulkDefault(key).source)+'</td></tr>';}).join('')+'</tbody></table>';
- $('#bulkDetailResults').innerHTML=bulkResult('제작 가능 수량',possible.toLocaleString('ko-KR')+'개')+bulkResult('총 재료 원가',bulkFmt(costPer*possible))+bulkResult('총 판매 예상 금액',bulkFmt(revenue))+bulkResult('재료 구매 기준 순수익',bulkFmt(profit),profit==null?'':profit>=0?'profit-result':'loss-result')+bulkResult('직접 수급 기준 순수익',r.sale==null?'판매가 미등록':bulkFmt(possible*(r.sale-Object.entries(ing).reduce((sum,[key,need])=>sum+(itemPrice(key)??0)*need,0))));
+ const consumedCost=Object.entries(ing).reduce((sum,[key,need])=>{const stock=bulkStock[key]||{};const have=Math.max(0,Number(stock.qty)||0);const avg=have>0?(Number(stock.cost)||0)/have:bulkCost(key);return sum+(avg==null?0:avg)*need*possible;},0);
+ const remainingValue=Object.entries(ing).reduce((sum,[key,need])=>{const stock=bulkStock[key]||{};const have=Math.max(0,Number(stock.qty)||0);const avg=have>0?(Number(stock.cost)||0)/have:0;return sum+Math.max(0,have-need*possible)*avg;},0);
+ const totalPurchasedCost=Object.values(bulkStock).reduce((sum,stock)=>sum+(Number(stock.cost)||0),0);
+ const cashDifference=revenue==null?null:revenue-totalPurchasedCost;
+ $('#bulkDetailResults').innerHTML=bulkResult('제작 가능 수량',possible.toLocaleString('ko-KR')+'개')+bulkResult('예상 판매 매출',bulkFmt(revenue))+bulkResult('실제 소비 재료 원가',bulkFmt(consumedCost))+bulkResult('예상 순수익',bulkFmt(revenue==null?null:revenue-consumedCost),revenue==null?'':revenue-consumedCost>=0?'profit-result':'loss-result')+bulkResult('총 원물·재료 구매 비용',bulkFmt(totalPurchasedCost))+bulkResult('남은 재료 재고 가치',bulkFmt(remainingValue))+bulkResult('전체 구매 비용 회수 후 현금 차액',bulkFmt(cashDifference),cashDifference==null?'':cashDifference>=0?'profit-result':'loss-result');
  $('#bulkMakeQty').value=Math.max(1,possible);
 }
 function renderBulkAll(){bulkInventoryRows();renderBulkRanking();}
@@ -1664,7 +1668,7 @@ function bulkConfirmSave(){
  const additions={};bulkIds.forEach(id=>{const row=bulkDraft[id],amount=Math.max(0,Number(row.qty)||0)*Math.max(1,Number(row.unit)||1728);if(amount>0)additions[id]=amount;});
  if(!Object.keys(additions).length){showHamzziNotice('구매 수량을 입력해 주세요','재고에 추가할 구매 수량이 없어요. 재료별 구매 수량을 입력한 뒤 다시 눌러 주세요.','입력 안내');return;}
  showHamzziConfirm('구매 수량을 저장할까요?','입력한 재료 구매 수량을 현재 보유 재고에 더합니다. 저장 후에는 요리별 제작 가능 수량과 예상 수익이 다시 계산돼요.',()=>{
-  bulkIds.forEach(id=>{const amount=additions[id]||0;if(!amount)return;const old=bulkStock[id]||{qty:0,cost:0};const oldQty=Number(old.qty)||0;const addCost=bulkDraft[id].source==='구매'?amount*(Number(bulkDraft[id].unitPrice)||0):amount*(itemPrice(id)||0);bulkStock[id]={qty:oldQty+amount,cost:(Number(old.cost)||0)+addCost};bulkDraft[id].qty=0;});
+  bulkIds.forEach(id=>{const amount=additions[id]||0;if(!amount)return;const old=bulkStock[id]||{qty:0,cost:0};const oldQty=Number(old.qty)||0;const addCost=bulkDraft[id].source==='구매'?amount*(Number(bulkDraft[id].unitPrice)||0):0;bulkStock[id]={qty:oldQty+amount,cost:(Number(old.cost)||0)+addCost};bulkDraft[id].qty=0;});
   localStorage.setItem(BULK_STOCK_KEY,JSON.stringify(bulkStock));localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));renderBulkAll();
   showHamzziNotice('구매 수량을 저장했어요!','재료가 보유 재고에 추가됐어요. 요리 추천 순위와 제작 가능 수량을 확인해 보세요.','저장 완료');
  },'구매 수량 저장 확인');

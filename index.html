@@ -1130,6 +1130,7 @@ function showHamzziNotice(title,message,kicker='HAMZZI HOUSE',kind='info'){
  document.getElementById('hamzziNoticeTitle').textContent=title;
  document.getElementById('hamzziNoticeMessage').textContent=message;
  document.getElementById('hamzziNoticeKicker').textContent=kicker;
+ const mascot=document.getElementById('hamzziNoticeMascot');if(mascot)mascot.src=kind==='question'?'assets/hamster-question.webp?v=1':'assets/hamster-exclamation.webp?v=1';
  const cancel=document.getElementById('hamzziNoticeCancel');
  if(cancel)cancel.hidden=true;
  const confirmBtn=document.getElementById('hamzziNoticeConfirm');
@@ -1151,7 +1152,7 @@ function showHamzziNotice(title,message,kicker='HAMZZI HOUSE',kind='info'){
  confirmBtn.focus();
 }
 function showHamzziConfirm(title,message,onConfirm,kicker='초기화 확인'){
- showHamzziNotice(title,message,kicker);
+ showHamzziNotice(title,message,kicker,'question');
  const modal=document.getElementById('hamzziNotice');
  const confirmBtn=document.getElementById('hamzziNoticeConfirm');
  const cancelBtn=document.getElementById('hamzziNoticeCancel');

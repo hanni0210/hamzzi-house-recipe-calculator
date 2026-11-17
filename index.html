@@ -1052,15 +1052,18 @@ tbody tr:hover{background:#fff8ef}
   <div id="recipeCards" class="grid"></div>
  </section>
  <section id="bulk" class="view hidden">
-  <div class="section-head"><div><h2>📦 대량 구매 계산</h2><p>세트·셜커 단위로 구매한 재료의 판매 수익과, 해당 재료로 만들 수 있는 요리의 예상 수익을 계산합니다.</p></div></div>
-  <div class="callout bulk-intro">1세트는 64개, 1셜커는 1,728개 기준입니다. 재료 구매 원가는 가격 관리의 내 구매가·조달 방식과 연동됩니다. 직접 채집 재료는 구매 비용 0원으로 계산됩니다.</div>
-  <div class="panel bulk-panel" id="bulkRecipePanel">
-   <h3>🍳 요리 가공 판매</h3>
-   <p class="sub">요리를 선택하고 재료별 조달 방식과 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다. 구매를 선택하면 가격 관리의 내 구매가를 적용하고, 직접 수급은 0원으로 계산합니다.</p>
-   <div class="field bulk-recipe-select"><label for="bulkRecipeSelect">제작할 요리</label><select id="bulkRecipeSelect"></select></div>
-   <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>필요 재료</th><th>조달 방식</th><th>구매 단위</th><th>수량</th><th>예상 구매 비용</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
-   <div class="bulk-results" id="bulkRecipeResults" aria-live="polite"></div>
-   <p class="sub bulk-footnote">※ 구매로 조달한 재료만 구매 비용에 포함하고, 직접 수급한 재료는 0원으로 계산합니다. 구매한 재료 전체의 비용을 차감해 계산합니다. 제작 후 남은 재료는 재고로 남으며, 남은 재료의 가치는 순수익에 별도로 더하지 않습니다. 2배 드롭이 적용되는 재료는 가격 관리의 확률을 반영한 예상 원가를 사용합니다.</p>
+  <div class="section-head"><div><h2>📦 원물 대량 구매 · 요리 수익 계산</h2><p>구매한 원물의 양을 입력하면 가공 수량, 제작 가능 요리, 매출, 원가와 잔여 재고를 계산합니다.</p></div></div>
+  <div class="callout bulk-intro">1세트는 64개, 1셜커는 1,728개입니다. 농작물 포대는 포대당 원물 9개이며, 농작물 포대 1세트는 원물 576개로 환산됩니다. 과일은 가격 관리의 과일 1세트 기준(576개)을 사용합니다. 가격 미등록 재료는 0원으로 간주하지 않습니다.</div>
+  <div class="panel bulk-panel" id="bulkRawPanel">
+   <h3>① 원물 구매 및 가공</h3><p class="sub">구매 또는 직접 수급을 선택하고 수량을 입력하세요. 구매 가격은 가격 관리에 저장된 가격과 연동됩니다.</p>
+   <div class="scroll"><table class="price-table bulk-ingredient-table"><thead><tr><th>원물</th><th>조달</th><th>구매 단위</th><th>수량</th><th>가공 후 예상 수량</th><th>구매 비용</th></tr></thead><tbody id="bcalcRawRows"></tbody></table></div>
+   <div class="field" style="max-width:300px;margin-top:14px"><label for="bcalcDouble">공통 2배 드롭 확률 (%)</label><input id="bcalcDouble" type="number" min="0" max="100" step="0.1"></div>
+  </div>
+  <div class="panel bulk-panel" id="bulkRecipePanel" style="margin-top:18px">
+   <h3>② 요리 제작 및 수익 분석</h3><div class="field bulk-recipe-select"><label for="bcalcRecipe">제작할 요리</label><select id="bcalcRecipe"></select></div>
+   <div class="scroll" style="margin-top:14px"><table class="price-table"><thead><tr><th>가공 재료</th><th>요리 1개 필요량</th><th>가공 후 보유량</th><th>제작 후 잔량</th><th>잔여 재고 가치</th></tr></thead><tbody id="bcalcIngredientRows"></tbody></table></div>
+   <div class="bulk-results" id="bcalcResults" aria-live="polite"></div>
+   <p class="sub bulk-footnote">※ 생선은 원물 1개당 기본 생선살 2개, 농작물·과일은 기본 1개를 생산하고 공통 2배 확률을 적용합니다. 소금은 철 블록 1개당 18개이며 2배 확률이 적용되지 않습니다. 정제수·벌집 조각·각얼음은 가공 없이 직접 재료로 계산합니다. 제작 가능 수량은 예상 생산량을 기준으로 한 정수 수량입니다.</p>
   </div>
  </section>
  <section id="prices" class="view hidden">
@@ -1607,92 +1610,48 @@ $('#clearOverrides').addEventListener('click',()=>{
 });
 $('#resetBtn').addEventListener('click',()=>$('#clearOverrides').click());
 renderPrices();refresh();
-const BULK_STOCK_KEY='hamzziHouseBulkStock_v1';
-const BULK_DRAFT_KEY='hamzziHouseBulkDraft_v1';
-const bulkIds=[...new Set(recipes.flatMap(r=>Object.keys(flattenBulkIngredients(r,1,[r.id]))))];
-let bulkStock=JSON.parse(localStorage.getItem(BULK_STOCK_KEY)||'{}');
-let bulkDraft=JSON.parse(localStorage.getItem(BULK_DRAFT_KEY)||'{}');
-let bulkSelectedRecipe=null;
-const bulkDefault=(id)=>({source:procurementSourceForItem(id)==='구매'?'구매':'직접 수급',unitPrice:itemPrice(id)??0,unit:1728,qty:0});
-const bulkFmt=n=>n==null?'가격 확인 필요':Math.round(n).toLocaleString('ko-KR')+'원';
-function bulkCost(id){const row=bulkDraft[id]||bulkDefault(id);if(row.source==='직접 수급')return 0;return Math.max(0,Number(row.unitPrice)||0);}
-function bulkInventoryRows(){
- $('#bulkInventoryRows').innerHTML=bulkIds.map(id=>{
-  const row={...bulkDefault(id),...(bulkDraft[id]||{})}, stock=Math.max(0,Number(bulkStock[id]?.qty)||0),cost=Number(row.qty||0)*Number(row.unit||1728)*Number(row.unitPrice||0);
-  return '<tr><td><b>'+itemName(id)+'</b></td><td><select data-bulk-source="'+id+'"><option '+(row.source==='구매'?'selected':'')+'>구매</option><option '+(row.source!=='구매'?'selected':'')+'>직접 수급</option></select></td><td><input type="number" min="0" step="0.01" value="'+(row.unitPrice??0)+'" data-bulk-price="'+id+'" aria-label="'+itemName(id)+' 개당 구매가"></td><td><select data-bulk-unit="'+id+'"><option value="64" '+(Number(row.unit)===64?'selected':'')+'>세트 (64개)</option><option value="1728" '+(Number(row.unit)!==64?'selected':'')+'>셜커 (1,728개)</option></select></td><td><input type="number" min="0" step="1" value="'+(row.qty??0)+'" data-bulk-qty="'+id+'" aria-label="'+itemName(id)+' 구매 수량"></td><td>'+bulkFmt(cost)+'</td><td>'+stock.toLocaleString('ko-KR')+'개</td></tr>';
- }).join('');
+const BC_ITEMS=[
+{id:'flour',name:'밀짚 포대',out:'flour',kind:'crop',i:0,y:9,us:64,uh:1728,ul:'포대'},
+{id:'beet',name:'비트 포대',out:'beet',kind:'crop',i:1,y:9,us:64,uh:1728,ul:'포대'},
+{id:'potato',name:'감자 포대',out:'potato',kind:'crop',i:2,y:9,us:64,uh:1728,ul:'포대'},
+{id:'carrot',name:'당근 포대',out:'carrot',kind:'crop',i:3,y:9,us:64,uh:1728,ul:'포대'},
+{id:'pumpkin',name:'호박 포대',out:'pumpkin',kind:'crop',i:4,y:9,us:64,uh:1728,ul:'포대'},
+{id:'watermelon',name:'수박 포대',out:'watermelon',kind:'crop',i:5,y:9,us:64,uh:1728,ul:'포대'},
+{id:'jam',name:'달콤한 열매 포대',out:'jam',kind:'crop',i:6,y:9,us:64,uh:1728,ul:'포대'},
+{id:'cocoa',name:'코코아 콩 포대',out:'cocoa',kind:'crop',i:7,y:9,us:64,uh:1728,ul:'포대'},
+{id:'apple',name:'사과 포대',out:'apple',kind:'crop',i:8,y:9,us:64,uh:1728,ul:'포대'},
+{id:'sugar',name:'사탕수수 포대',out:'sugar',kind:'crop',i:9,y:9,us:64,uh:1728,ul:'포대'},
+{id:'fish',name:'생선 원물',out:'fish',kind:'fish',y:2,us:64,uh:1728,ul:'마리'},
+{id:'iron',name:'철 블록',out:'salt',kind:'iron',y:18,us:64,uh:1728,ul:'개'},
+{id:'fruit',name:'과일 원물',out:'fruitmix',kind:'fruit',y:1,us:576,uh:15552,ul:'개'},
+{id:'water',name:'정제수',out:'water',kind:'direct',y:1,us:64,uh:1728,ul:'개'},
+{id:'honey',name:'벌집 조각',out:'honey',kind:'direct',y:1,us:64,uh:1728,ul:'개'},
+{id:'ice',name:'각얼음',out:'ice',kind:'direct',y:1,us:64,uh:1728,ul:'개'}];
+const BC_NAMES={flour:'밀가루',beet:'비트 분말',potato:'손질된 감자',carrot:'손질된 당근',pumpkin:'손질된 호박',watermelon:'손질된 수박',jam:'달콤한 열매 잼',cocoa:'코코아 가루',apple:'사과',sugar:'정제된 설탕',fish:'손질된 생선살',salt:'소금',fruitmix:'과일 믹스',water:'정제수',honey:'벌집 조각',ice:'각얼음'};
+const bcE=id=>document.getElementById(id),bcN=n=>Math.round(n||0).toLocaleString('ko-KR'),bcW=n=>n==null?'가격 미등록':bcN(n)+'원',bcK='hamzziHouseBulkRaw_v2';
+let bcD={};try{bcD=JSON.parse(localStorage.getItem(bcK)||'{}')||{};}catch(e){bcD={};}
+const bcRows=bcE('bcalcRawRows'),bcRecipe=bcE('bcalcRecipe'),bcIR=bcE('bcalcIngredientRows'),bcRes=bcE('bcalcResults'),bcRate=bcE('bcalcDouble');
+function bcSource(x){if(x.kind==='crop')return cropProcurement(cropPacks[x.i][0],x.i);if(x.kind==='fish')return procurementSourceForItem('fish');if(x.kind==='iron')return procurementSourceForItem('salt');return procurementSourceForItem(x.id);}
+function bcPrice(x){if(x.kind==='crop')return effectiveCropSetPrice(x.i)/64;if(x.kind==='fish')return fishShulkerPrice/1728;if(x.kind==='iron')return ironBlockSetPrice/64;if(x.id==='water')return waterCost/64;if(x.id==='fruit')return overrides.fruit===undefined||overrides.fruit===''?null:Number(overrides.fruit)/576;if(x.id==='honey'||x.id==='ice'){const v=overrides[x.id];return v===undefined||v===''?null:Number(v);}return null;}
+function bcGet(x){const d=bcD[x.id]||{};return {source:d.source||bcSource(x),unit:Number(d.unit)||x.uh,qty:Math.max(0,Number(d.qty)||0)};}
+function bcUnit(x,u){return '<option value="'+x.us+'" '+(u===x.us?'selected':'')+'>1세트 ('+bcN(x.us)+' '+x.ul+')</option><option value="'+x.uh+'" '+(u===x.uh?'selected':'')+'>1셜커 ('+bcN(x.uh)+' '+x.ul+')</option>';}
+function bcRead(x){return {source:bcRows.querySelector('[data-bcs="'+x.id+'"]').value,unit:Number(bcRows.querySelector('[data-bcu="'+x.id+'"]').value),qty:Math.max(0,Math.floor(Number(bcRows.querySelector('[data-bcq="'+x.id+'"]').value)||0))};}
+function bcNeeds(r){const o={};function add(z,m,stack){z.ingredients.forEach(([id,n])=>{if(id[0]==='@'){const sub=recipes.find(t=>t.id===id.slice(1));if(sub&&!stack.includes(sub.id))add(sub,n*m,stack.concat(sub.id));}else o[id]=(o[id]||0)+n*m;});}add(r,1,[r.id]);return o;}
+function bcCalc(){
+ const chance=Math.max(0,Math.min(100,Number(bcRate.value)||0))/100,inv={},unitCost={},rawCost={n:0,unknown:false};
+ BC_ITEMS.forEach(x=>{const d=bcRead(x),raw=d.qty*d.unit,price=bcPrice(x),cost=d.source==='직접 수급'?0:price==null?null:price*raw;let out=raw*x.y;if(x.kind==='crop'||x.kind==='fish'||x.kind==='fruit')out*=1+chance;inv[x.out]=(inv[x.out]||0)+out;if(d.source==='구매'&&raw>0&&cost==null)rawCost.unknown=true;else if(cost!=null)rawCost.n+=cost;unitCost[x.out]=d.source==='직접 수급'?0:cost==null?null:out?cost/out:0;const y=bcRows.querySelector('[data-bcy="'+x.id+'"]'),c=bcRows.querySelector('[data-bcc="'+x.id+'"]');y.textContent=bcN(out)+'개';c.textContent=d.source==='직접 수급'?'0원 (직접 수급)':bcW(cost);});
+ const r=recipes.find(x=>x.id===bcRecipe.value)||recipes[0],needs=bcNeeds(r);let max=Infinity;Object.keys(needs).forEach(id=>{max=Math.min(max,Math.floor((inv[id]||0)/needs[id]));});if(!Number.isFinite(max))max=0;
+ const revenue=max*r.sale;let usedCost=0,unknown=false;Object.keys(needs).forEach(id=>{const n=max*needs[id],c=unitCost[id];if(n>0&&c==null)unknown=true;else if(c!=null)usedCost+=n*c;});
+ const profit=unknown?null:revenue-usedCost;let leftValue=0,leftUnknown=false;
+ const rows=Object.keys(inv).map(id=>{const remain=Math.max(0,inv[id]-max*(needs[id]||0)),c=unitCost[id];if(remain>0&&c==null)leftUnknown=true;else if(c!=null)leftValue+=remain*c;return '<tr><td>'+(BC_NAMES[id]||id)+'</td><td>'+bcN(needs[id]||0)+'개</td><td>'+bcN(inv[id])+'개</td><td>'+bcN(remain)+'개</td><td>'+(remain>0&&c==null?'가격 미등록':bcW(remain*c))+'</td></tr>';}).join('');
+ bcIR.innerHTML=Object.keys(needs).map(id=>'<tr><td>'+(BC_NAMES[id]||id)+'</td><td>'+bcN(needs[id])+'개</td><td>'+bcN(inv[id]||0)+'개</td><td>'+bcN(Math.max(0,(inv[id]||0)-max*needs[id]))+'개</td><td>'+(Math.max(0,(inv[id]||0)-max*needs[id])>0&&unitCost[id]==null?'가격 미등록':bcW(Math.max(0,(inv[id]||0)-max*needs[id])*unitCost[id]))+'</td></tr>').join('');
+ const cards=[['가공 후 재료 총량',bcN(Object.values(inv).reduce((a,b)=>a+b,0))+'개'],['제작 가능 요리 수량',bcN(max)+'개'],['예상 판매 매출',bcW(revenue)],['원물 총 구매 비용',bcW(rawCost.unknown?null:rawCost.n)],['요리 소모 재료 원가',bcW(unknown?null:usedCost)],['예상 순수익',bcW(profit)],['매출 - 원물 구매 비용',bcW(rawCost.unknown?null:revenue-rawCost.n)],['남은 재고 가치',bcW(leftUnknown?null:leftValue)]];
+ bcRes.innerHTML=cards.map((v,i)=>'<div class="bulk-result '+(i===5&&profit!=null?(profit>=0?'profit-result':'loss-result'):'')+'"><small>'+v[0]+'</small><strong>'+v[1]+'</strong></div>').join('')+'<div class="bulk-result" style="grid-column:1/-1"><small>제작 후 남는 전체 가공 재료 (요리에 사용하지 않는 재료 포함)</small><div class="scroll"><table><thead><tr><th>재료</th><th>요리 필요량</th><th>가공 후 보유량</th><th>제작 후 잔량</th><th>잔여 재고 가치</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+(rawCost.unknown||unknown?'<p class="sub" style="grid-column:1/-1;color:#b56b68">구매 가격이 등록되지 않은 재료가 있어 원가와 순수익을 계산할 수 없습니다. 가격 관리에서 가격을 입력하거나 직접 수급으로 변경해 주세요.</p>':'');
 }
-function saveBulkDraftFromUI(){
- bulkIds.forEach(id=>{
-  const get=sel=>document.querySelector(sel+'[data-'+sel.slice(1).split('[')[0]+'="'+id+'"]');
-  const source=document.querySelector('[data-bulk-source="'+id+'"]')?.value||'직접 수급';
-  const unit=Number(document.querySelector('[data-bulk-unit="'+id+'"]')?.value)||1728;
-  const qty=Math.max(0,Math.floor(Number(document.querySelector('[data-bulk-qty="'+id+'"]')?.value)||0));
-  const unitPrice=Math.max(0,Number(document.querySelector('[data-bulk-price="'+id+'"]')?.value)||0);
-  bulkDraft[id]={source,unit,qty,unitPrice};
- });
-}
-function renderBulkRanking(){
- const list=recipes.map(r=>{
-  const ing=flattenBulkIngredients(r,1,[r.id]);let possible=Infinity,valid=true,costPer=0;
-  Object.entries(ing).forEach(([id,need])=>{
-   const available=Math.max(0,Number(bulkStock[id]?.qty)||0);
-   possible=Math.min(possible,Math.floor(available/need));
-   const c=bulkCost(id);if(c==null||!Number.isFinite(c))valid=false;else costPer+=c*need;
-  });
-  if(!Number.isFinite(possible))possible=0;
-  const profit=r.sale==null?null:r.sale-costPer;
-  return {r,ing,possible,costPer,profit,valid,revenue:r.sale==null?null:possible*r.sale,totalProfit:r.sale==null?null:possible*profit};
- }).sort((a,b)=>(b.profit??-Infinity)-(a.profit??-Infinity));
- $('#bulkRecipeRanking').innerHTML=list.map((x,i)=>'<button type="button" class="bulk-rank-card" data-bulk-open="'+x.r.id+'"><span class="bulk-rank-no">'+(i+1)+'</span><span class="bulk-rank-main"><b>'+x.r.name+'</b><small>단독 제작 최대 '+x.possible.toLocaleString('ko-KR')+'개 · 개당 순수익 '+(x.profit==null?'판매가 미등록':bulkFmt(x.profit))+'</small><small>최대 제작 시 매출 '+bulkFmt(x.revenue)+' · 순수익 '+bulkFmt(x.totalProfit)+'</small></span><span class="bulk-rank-arrow">›</span></button>').join('');
-}
-function openBulkRecipe(id){
- const r=recipes.find(x=>x.id===id);if(!r)return;bulkSelectedRecipe=id;
- const ing=flattenBulkIngredients(r,1,[r.id]);let possible=Infinity,costPer=0,valid=true;
- Object.entries(ing).forEach(([key,need])=>{const have=Math.max(0,Number(bulkStock[key]?.qty)||0);possible=Math.min(possible,Math.floor(have/need));const c=bulkCost(key);if(c==null)valid=false;else costPer+=c*need;});
- if(!Number.isFinite(possible))possible=0;
- const revenue=r.sale==null?null:possible*r.sale,profit=valid&&revenue!=null?revenue-costPer*possible:null;
- $('#bulkRecipeRanking').parentElement.classList.add('hidden');$('#bulkRecipeDetail').classList.remove('hidden');
- $('#bulkDetailTitle').textContent=r.name+' 대량 제작 상세';$('#bulkDetailSubtitle').textContent='현재 보유 재고 기준 단독 제작 가능 수량: '+possible.toLocaleString('ko-KR')+'개';
- $('#bulkDetailIngredients').innerHTML='<table class="price-table"><thead><tr><th>재료</th><th>필요 수량</th><th>현재 보유량</th><th>제작 후 잔여량</th><th>조달 기준</th></tr></thead><tbody>'+Object.entries(ing).map(([key,need])=>{const have=Math.max(0,Number(bulkStock[key]?.qty)||0),used=possible*need;return '<tr><td>'+itemName(key)+'</td><td>'+used.toLocaleString('ko-KR')+'개 ('+need+'/개)</td><td>'+have.toLocaleString('ko-KR')+'개</td><td>'+Math.max(0,have-used).toLocaleString('ko-KR')+'개</td><td>'+(bulkDraft[key]?.source||bulkDefault(key).source)+'</td></tr>';}).join('')+'</tbody></table>';
- const consumedCost=Object.entries(ing).reduce((sum,[key,need])=>{const stock=bulkStock[key]||{};const have=Math.max(0,Number(stock.qty)||0);const avg=have>0?(Number(stock.cost)||0)/have:bulkCost(key);return sum+(avg==null?0:avg)*need*possible;},0);
- const remainingValue=Object.entries(ing).reduce((sum,[key,need])=>{const stock=bulkStock[key]||{};const have=Math.max(0,Number(stock.qty)||0);const avg=have>0?(Number(stock.cost)||0)/have:0;return sum+Math.max(0,have-need*possible)*avg;},0);
- const totalPurchasedCost=Object.values(bulkStock).reduce((sum,stock)=>sum+(Number(stock.cost)||0),0);
- const cashDifference=revenue==null?null:revenue-totalPurchasedCost;
- $('#bulkDetailResults').innerHTML=bulkResult('제작 가능 수량',possible.toLocaleString('ko-KR')+'개')+bulkResult('예상 판매 매출',bulkFmt(revenue))+bulkResult('실제 소비 재료 원가',bulkFmt(consumedCost))+bulkResult('예상 순수익',bulkFmt(revenue==null?null:revenue-consumedCost),revenue==null?'':revenue-consumedCost>=0?'profit-result':'loss-result')+bulkResult('총 원물·재료 구매 비용',bulkFmt(totalPurchasedCost))+bulkResult('남은 재료 재고 가치',bulkFmt(remainingValue))+bulkResult('전체 구매 비용 회수 후 현금 차액',bulkFmt(cashDifference),cashDifference==null?'':cashDifference>=0?'profit-result':'loss-result');
- $('#bulkMakeQty').value=Math.max(1,possible);
-}
-function renderBulkAll(){bulkInventoryRows();renderBulkRanking();}
-function bulkConfirmSave(){
- saveBulkDraftFromUI();
- const additions={};bulkIds.forEach(id=>{const row=bulkDraft[id],amount=Math.max(0,Number(row.qty)||0)*Math.max(1,Number(row.unit)||1728);if(amount>0)additions[id]=amount;});
- if(!Object.keys(additions).length){showHamzziNotice('구매 수량을 입력해 주세요','재고에 추가할 구매 수량이 없어요. 재료별 구매 수량을 입력한 뒤 다시 눌러 주세요.','입력 안내');return;}
- showHamzziConfirm('구매 수량을 저장할까요?','입력한 재료 구매 수량을 현재 보유 재고에 더합니다. 저장 후에는 요리별 제작 가능 수량과 예상 수익이 다시 계산돼요.',()=>{
-  bulkIds.forEach(id=>{const amount=additions[id]||0;if(!amount)return;const old=bulkStock[id]||{qty:0,cost:0};const oldQty=Number(old.qty)||0;const addCost=bulkDraft[id].source==='구매'?amount*(Number(bulkDraft[id].unitPrice)||0):0;bulkStock[id]={qty:oldQty+amount,cost:(Number(old.cost)||0)+addCost};bulkDraft[id].qty=0;});
-  localStorage.setItem(BULK_STOCK_KEY,JSON.stringify(bulkStock));localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));renderBulkAll();
-  showHamzziNotice('구매 수량을 저장했어요!','재료가 보유 재고에 추가됐어요. 요리 추천 순위와 제작 가능 수량을 확인해 보세요.','저장 완료');
- },'구매 수량 저장 확인');
-}
-function resetBulkStock(){
- showHamzziConfirm('보유 재고를 초기화할까요?','저장된 재료 재고가 모두 삭제됩니다. 이 작업은 되돌릴 수 없어요.',()=>{bulkStock={};localStorage.removeItem(BULK_STOCK_KEY);renderBulkAll();showHamzziNotice('보유 재고를 초기화했어요!','저장된 재료 재고를 모두 비웠어요.','초기화 완료');},'재고 초기화 확인');
-}
-$('#bulkSavePurchase').addEventListener('click',bulkConfirmSave);
-$('#bulkResetStock').addEventListener('click',resetBulkStock);
-$('#bulkDetailBack').addEventListener('click',()=>{$('#bulkRecipeDetail').classList.add('hidden');$('#bulkRecipeRanking').parentElement.classList.remove('hidden');});
-$('#bulkMakeRecipe').addEventListener('click',()=>{
- const r=recipes.find(x=>x.id===bulkSelectedRecipe);if(!r)return;const qty=Math.max(0,Math.floor(Number($('#bulkMakeQty').value)||0));if(!qty)return;
- const ing=flattenBulkIngredients(r,1,[r.id]);const lacking=Object.entries(ing).filter(([id,n])=>(Number(bulkStock[id]?.qty)||0)<n*qty);
- if(lacking.length){showHamzziNotice('재료가 부족해요',''+lacking.map(([id,n])=>itemName(id)+' '+Math.max(0,n*qty-(Number(bulkStock[id]?.qty)||0))+'개 부족').join(', ')+' 부족합니다. 구매 수량을 추가해 주세요.','재료 부족 안내');return;}
- showHamzziConfirm(r.name+' '+qty.toLocaleString('ko-KR')+'개를 제작할까요?','제작에 필요한 재료를 보유 재고에서 차감합니다. 차감 후 남은 재료는 다음 제작에 사용할 수 있어요.',()=>{
-  Object.entries(ing).forEach(([id,n])=>{bulkStock[id].qty-=n*qty;if(bulkStock[id].qty<=0)delete bulkStock[id];});
-  localStorage.setItem(BULK_STOCK_KEY,JSON.stringify(bulkStock));renderBulkAll();openBulkRecipe(r.id);showHamzziNotice('요리 제작을 반영했어요!','제작 수량만큼 재료를 차감하고 남은 재료를 보유 재고에 저장했어요.','제작 완료');
- },'요리 제작 확인');
-});
-document.addEventListener('click',e=>{const card=e.target.closest('[data-bulk-open]');if(card)openBulkRecipe(card.dataset.bulkOpen);});
-document.addEventListener('input',e=>{if(e.target.matches('[data-bulk-qty],[data-bulk-price]')){saveBulkDraftFromUI();localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));}});
-document.addEventListener('change',e=>{if(e.target.matches('[data-bulk-source],[data-bulk-unit]')){saveBulkDraftFromUI();localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));renderBulkAll();}});
-renderBulkAll();
-const savedTab=location.hash.slice(1)||'dashboard';
+function bcSave(){BC_ITEMS.forEach(x=>{bcD[x.id]=bcRead(x);});localStorage.setItem(bcK,JSON.stringify(bcD));}
+function bcRender(){bcRows.innerHTML=BC_ITEMS.map(x=>{const d=bcGet(x),price=bcPrice(x),cost=d.source==='직접 수급'?0:price==null?null:price*d.qty*d.unit;return '<tr><td><b>'+x.name+'</b><small style="display:block;color:var(--muted)">'+BC_NAMES[x.out]+' 생산</small></td><td><select data-bcs="'+x.id+'"><option '+(d.source==='구매'?'selected':'')+'>구매</option><option '+(d.source!=='구매'?'selected':'')+'>직접 수급</option></select></td><td><select data-bcu="'+x.id+'">'+bcUnit(x,d.unit)+'</select></td><td><input type="number" min="0" step="1" value="'+d.qty+'" data-bcq="'+x.id+'"></td><td data-bcy="'+x.id+'">-</td><td data-bcc="'+x.id+'">'+bcW(cost)+'</td></tr>';}).join('');bcCalc();}
+function bcInit(){bcRate.value=String(cookingDouble||0);bcRecipe.innerHTML=recipes.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');bcRecipe.value=recipes[0].id;bcRows.addEventListener('input',()=>{bcSave();bcCalc();});bcRows.addEventListener('change',()=>{bcSave();bcCalc();});bcRate.addEventListener('input',()=>{const v=Number(bcRate.value);if(Number.isFinite(v)&&v>=0&&v<=100){cookingDouble=v;localStorage.setItem('cookingDouble',String(v));}bcCalc();});bcRecipe.addEventListener('change',bcCalc);document.addEventListener('price-settings-saved',bcRender);bcRender();}
+bcInit();const savedTab=location.hash.slice(1)||'dashboard';
 switchTab(savedTab,{updateHistory:false,scroll:false});
 </script>
 

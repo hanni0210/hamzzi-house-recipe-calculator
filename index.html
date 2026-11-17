@@ -1758,6 +1758,8 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   }
   return out;
  };
+ const bulkMaterialNames={fish:'생선',flour:'밀짚',potato:'감자',sugar:'사탕수수',beet:'비트',carrot:'당근',cocoa:'코코아 콩',pumpkin:'호박',watermelon:'수박',jam:'달콤한 열매',salt:'소금 원료(철 블록)',fruitmix:'과일 원물'};
+ const bulkMaterialName=id=>bulkMaterialNames[id]||itemName(id);
  const number=n=>Math.round(n||0).toLocaleString('ko-KR');
  const unitOptions='<option value="64">1세트 (64개)</option><option value="1728" selected>1셜커 (1,728개)</option>';
  const render=()=>{
@@ -1767,7 +1769,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   rows.innerHTML=Object.entries(needs).map(([id,qty])=>{
    const cropIndex=cropIngredientMap[id];
    const source=(cropIndex!==undefined?cropProcurement(cropPacks[cropIndex][0],cropIndex):procurementSourceForItem(id))==='구매'?'구매':'직접 채집';
-   return '<tr><td>'+itemName(id)+' <small>('+number(qty)+'개 / 요리 1개)</small></td><td><select class="bulk-buy-source" data-item="'+id+'" aria-label="'+itemName(id)+' 조달 방식"><option value="구매" '+(source==='구매'?'selected':'')+'>구매</option><option value="직접 채집" '+(source==='직접 채집'?'selected':'')+'>직접 수급</option></select></td><td><select class="bulk-buy-unit" data-item="'+id+'">'+unitOptions+'</select></td><td><input class="bulk-buy-qty" data-item="'+id+'" type="number" min="0" step="1" value="1" aria-label="'+itemName(id)+' 수량"></td><td class="bulk-cost-cell" data-item="'+id+'">계산 중</td></tr>';
+   return '<tr><td>'+bulkMaterialName(id)+' <small>('+number(qty)+'개 / 요리 1개)</small></td><td><select class="bulk-buy-source" data-item="'+id+'" aria-label="'+bulkMaterialName(id)+' 조달 방식"><option value="구매" '+(source==='구매'?'selected':'')+'>구매</option><option value="직접 채집" '+(source==='직접 채집'?'selected':'')+'>직접 수급</option></select></td><td><select class="bulk-buy-unit" data-item="'+id+'">'+unitOptions+'</select></td><td><input class="bulk-buy-qty" data-item="'+id+'" type="number" min="0" step="1" value="1" aria-label="'+bulkMaterialName(id)+' 수량"></td><td class="bulk-cost-cell" data-item="'+id+'">계산 중</td></tr>';
   }).join('');
   calculate();
  };
@@ -1785,7 +1787,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
    const price=source==='직접 채집'?0:bulkPurchaseUnitPrice(id);
    const costCell=rows.querySelector('.bulk-cost-cell[data-item="'+id+'"]');
    if(costCell)costCell.textContent=source==='직접 채집'?'0원 (직접 수급)':(price==null?'가격 미등록':number(price*available)+'원');
-   if(price==null)unpriced.push(itemName(id)); else totalCost+=available*price;
+   if(price==null)unpriced.push(bulkMaterialName(id)); else totalCost+=available*price;
   }
   if(!Number.isFinite(max))max=0;
   const revenue=max*recipe.sale;
@@ -1793,7 +1795,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   const remaining=Object.entries(needs).map(([id,perRecipe])=>{
    const unit=Number(rows.querySelector('.bulk-buy-unit[data-item="'+id+'"]')?.value||1728);
    const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0)));
-   return '<tr><td>'+itemName(id)+'</td><td>'+number(unit*qty-max*perRecipe)+'개</td></tr>';
+   return '<tr><td>'+bulkMaterialName(id)+'</td><td>'+number(unit*qty-max*perRecipe)+'개</td></tr>';
   }).join('');
   results.innerHTML=
    '<div class="bulk-result"><small>제작 가능 요리 수량</small><strong>'+number(max)+'개</strong></div>'+

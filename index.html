@@ -1056,7 +1056,7 @@ tbody tr:hover{background:#fff8ef}
   <div class="callout bulk-intro">1세트는 64개, 1셜커는 1,728개 기준입니다. 재료 구매 원가는 가격 관리의 내 구매가·조달 방식과 연동됩니다. 직접 채집 재료는 구매 비용 0원으로 계산됩니다.</div>
   <div class="panel bulk-panel" id="bulkRecipePanel">
    <h3>🍳 요리 가공 판매</h3>
-   <p class="sub">요리를 선택하고 재료별 조달 방식과 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다. 직접 수급한 재료는 구매 비용 0원으로 처리됩니다.</p>
+   <p class="sub">요리를 선택하고 재료별 조달 방식과 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다. 구매를 선택하면 가격 관리의 내 구매가를 적용하고, 직접 수급은 0원으로 계산합니다.</p>
    <div class="field bulk-recipe-select"><label for="bulkRecipeSelect">제작할 요리</label><select id="bulkRecipeSelect"></select></div>
    <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>필요 재료</th><th>조달 방식</th><th>구매 단위</th><th>수량</th><th>예상 구매 비용</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
    <div class="bulk-results" id="bulkRecipeResults" aria-live="polite"></div>
@@ -1279,6 +1279,30 @@ function itemPrice(id){
   return rawFruitCost/(1+cookingDouble/100);
  }
  if(overrides[id]!==undefined && overrides[id]!=='' )return Number(overrides[id]);
+ return it.price;
+}
+function bulkPurchaseUnitPrice(id){
+ const it=baseItems.find(x=>x.id===id);
+ if(!it)return null;
+ const index=cropIngredientMap[id];
+ if(index!==undefined){
+  const effectiveSet=effectiveCropSetPrice(index);
+  if(!Number.isFinite(effectiveSet))return null;
+  return effectiveSet/(576*(1+cookingDouble/100));
+ }
+ if(id==='fish')return fishShulkerPrice/(1728*2*(1+cookingDouble/100));
+ if(id==='salt')return ironBlockSetPrice/64/9*3/6;
+ if(id==='water')return waterCost/64;
+ if(id==='fruit'){
+  if(overrides.fruit===undefined||overrides.fruit==='')return null;
+  return Number(overrides.fruit)/576;
+ }
+ if(id==='fruitmix'){
+  const rawFruitCost=bulkPurchaseUnitPrice('fruit');
+  if(rawFruitCost==null)return null;
+  return rawFruitCost/(1+cookingDouble/100);
+ }
+ if(overrides[id]!==undefined&&overrides[id]!=='')return Number(overrides[id]);
  return it.price;
 }
 function ingredientCost(key,stack=[]){if(key.startsWith('@')){let r=recipes.find(x=>x.id===key.slice(1));return r?recipeCost(r,stack.concat(r.id)):null;}return itemPrice(key);}
@@ -1756,7 +1780,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
    const available=unit*qty;
    max=Math.min(max,Math.floor(available/perRecipe));
    const source=rows.querySelector('.bulk-buy-source[data-item="'+id+'"]')?.value||'구매';
-   const price=source==='직접 채집'?0:itemPrice(id);
+   const price=source==='직접 채집'?0:bulkPurchaseUnitPrice(id);
    const costCell=rows.querySelector('.bulk-cost-cell[data-item="'+id+'"]');
    if(costCell)costCell.textContent=source==='직접 채집'?'0원 (직접 수급)':(price==null?'가격 미등록':number(price*available)+'원');
    if(price==null)unpriced.push(itemName(id)); else totalCost+=available*price;

@@ -895,7 +895,7 @@ tbody tr:hover{background:#fff8ef}
 .hamzzi-notice-backdrop{position:absolute;inset:0;background:rgba(48,39,31,.42);backdrop-filter:blur(3px)}
 .hamzzi-notice-card{position:relative;isolation:isolate;width:min(100%,360px);min-height:340px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:18px 24px 20px;border:2px solid #d8dfc9;border-radius:27px;background:radial-gradient(circle at 50% 18%,#fffef9 0,#fffaf0 58%,#f8f0df 100%);box-shadow:0 16px 42px rgba(63,48,31,.2),inset 0 0 0 4px rgba(255,255,255,.68);transform:translateY(10px) scale(.97);transition:transform .24s cubic-bezier(.2,.8,.2,1)}
 .hamzzi-notice.is-open .hamzzi-notice-card{transform:translateY(0) scale(1)}
-.hamzzi-notice-mascot{display:block;width:128px;height:128px;object-fit:contain;margin:4px auto 4px;filter:drop-shadow(0 4px 3px rgba(93,69,43,.08));animation:hamzzi-pop .55s cubic-bezier(.2,.8,.2,1) both}
+.hamzzi-notice-mascot{display:block;width:128px;height:128px;object-fit:contain;margin:4px auto 4px;filter:drop-shadow(0 4px 3px rgba(93,69,43,.08));opacity:1;transition:opacity .12s ease;animation:hamzzi-pop .55s cubic-bezier(.2,.8,.2,1) both}
 .hamzzi-notice-kicker{font-size:9px;letter-spacing:2px;font-weight:800;color:#a18b65;margin-top:-2px}
 .hamzzi-notice-card h2{font-size:21px;line-height:1.35;text-align:center;color:#6d683b;margin:5px 0 6px;font-weight:850}
 .hamzzi-notice-card p{max-width:285px;margin:0;color:#786b56;font-size:12px;line-height:1.65;text-align:center;word-break:keep-all}
@@ -998,6 +998,8 @@ tbody tr:hover{background:#fff8ef}
 #bulkRecipePanel .bulk-drop-field{margin-bottom:16px}
 #bulkRecipePanel .scroll{margin-top:0!important}
 #bulkRecipePanel .bulk-results{margin-top:22px}
+#bulkRecipePanel .bulk-save-row{display:flex;justify-content:flex-end;margin-top:16px}
+#bulkRecipePanel .bulk-save-button{min-width:104px;background:var(--green);color:#fff;border:1px solid var(--green)}
 #bulkRecipePanel .bulk-footnote{margin-top:20px}
 </style>
 </head>
@@ -1060,6 +1062,7 @@ tbody tr:hover{background:#fff8ef}
    <div class="field bulk-drop-field" style="max-width:300px;margin-top:14px"><label for="bcalcDouble">공통 2배 드롭 확률 (%)</label><input id="bcalcDouble" type="number" min="0" max="100" step="0.1"></div>
    <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>재료</th><th>조달</th><th>구매 단위</th><th>수량</th><th>가공 후 예상 수량</th><th>요리 필요량</th><th>제작 후 잔량</th><th>구매 비용</th></tr></thead><tbody id="bcalcRawRows"></tbody></table></div>
    <div class="bulk-results" id="bcalcResults" aria-live="polite"></div>
+   <div class="bulk-save-row"><button type="button" class="btn bulk-save-button" id="bcalcSave">저장</button></div>
    <p class="sub bulk-footnote">※ 물고기는 1마리당 기본 생선살 2개, 농작물·과일은 기본 1개를 생산하고 공통 2배 확률을 적용합니다. 소금은 철 블록 1개당 18개이며 2배 확률은 적용되지 않습니다.<br>※ 정제수·벌집 조각·각얼음은 가공 없이 재료로 계산합니다.<br>※ 제작 가능 수량은 예상 생산량 기준의 정수입니다.<br>※ 2배 드롭 확률 계산에서 소수점이 생기면 실제 보유 가능한 수량에 맞춰 소수점 아래는 버립니다.</p>
   </div>
  </section>
@@ -1103,7 +1106,7 @@ function showHamzziNotice(title,message,kicker='HAMZZI HOUSE',kind='info'){
  document.getElementById('hamzziNoticeTitle').textContent=title;
  document.getElementById('hamzziNoticeMessage').textContent=message;
  document.getElementById('hamzziNoticeKicker').textContent=kicker;
- const mascot=document.getElementById('hamzziNoticeMascot');if(mascot)mascot.src=kind==='question'?'assets/hamster-question.webp?v=1':'assets/hamster-exclamation.webp?v=1';
+ const mascot=document.getElementById('hamzziNoticeMascot');if(mascot){const nextSrc=kind==='question'?'assets/hamster-question.webp?v=1':kind==='bulk-save'?'assets/hamster-notice.webp?v=20261117-transparent2':'assets/hamster-exclamation.webp?v=1';mascot.style.opacity='0';mascot.onload=()=>{mascot.style.opacity='1';};mascot.onerror=()=>{mascot.style.opacity='1';};mascot.src=nextSrc;if(mascot.complete&&mascot.naturalWidth>0)mascot.style.opacity='1';}
  const cancel=document.getElementById('hamzziNoticeCancel');
  if(cancel)cancel.hidden=true;
  const confirmBtn=document.getElementById('hamzziNoticeConfirm');
@@ -1677,6 +1680,7 @@ function bcInit(){
  bcRecipe.addEventListener('change',bcRender);
  bcRows.addEventListener('input',()=>{const r=recipes.find(x=>x.id===bcRecipe.value)||recipes[0];bcSave(bcItemsFor(bcNeeds(r)));bcCalc();});
  bcRows.addEventListener('change',()=>{const r=recipes.find(x=>x.id===bcRecipe.value)||recipes[0];bcSave(bcItemsFor(bcNeeds(r)));bcCalc();});
+ bcE('bcalcSave').addEventListener('click',()=>{const r=recipes.find(x=>x.id===bcRecipe.value)||recipes[0];bcSave(bcItemsFor(bcNeeds(r)));localStorage.setItem('hamzziBulkSelectedRecipe',bcRecipe.value);showHamzziNotice('대량 계산 내용을 저장했어요!','선택한 요리와 재료별 구매·수급 설정을 이 브라우저에 저장했어요.','저장 완료','bulk-save');});
  bcRate.addEventListener('input',()=>{const v=Number(bcRate.value);if(Number.isFinite(v)&&v>=0&&v<=100){cookingDouble=v;localStorage.setItem('cookingDouble',String(v));}bcCalc();});
  document.addEventListener('price-settings-saved',bcRender);
  bcRender();

@@ -1765,7 +1765,8 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   if(!recipe)return;
   const needs=flatten(recipe);
   rows.innerHTML=Object.entries(needs).map(([id,qty])=>{
-   const cropIndex=cropIngredientMap[id];\n   const source=(cropIndex!==undefined?cropProcurement(cropPacks[cropIndex][0],cropIndex):procurementSourceForItem(id))==='구매'?'구매':'직접 채집';
+   const cropIndex=cropIngredientMap[id];
+   const source=(cropIndex!==undefined?cropProcurement(cropPacks[cropIndex][0],cropIndex):procurementSourceForItem(id))==='구매'?'구매':'직접 채집';
    return '<tr><td>'+itemName(id)+' <small>('+number(qty)+'개 / 요리 1개)</small></td><td><select class="bulk-buy-source" data-item="'+id+'" aria-label="'+itemName(id)+' 조달 방식"><option value="구매" '+(source==='구매'?'selected':'')+'>구매</option><option value="직접 채집" '+(source==='직접 채집'?'selected':'')+'>직접 수급</option></select></td><td><select class="bulk-buy-unit" data-item="'+id+'">'+unitOptions+'</select></td><td><input class="bulk-buy-qty" data-item="'+id+'" type="number" min="0" step="1" value="1" aria-label="'+itemName(id)+' 수량"></td><td class="bulk-cost-cell" data-item="'+id+'">계산 중</td></tr>';
   }).join('');
   calculate();

@@ -995,6 +995,7 @@ tbody tr:hover{background:#fff8ef}
 #bulkRecipePanel h3{margin-bottom:8px}
 #bulkRecipePanel>.sub{margin:0 0 22px}
 #bulkRecipePanel .bulk-recipe-select{margin-top:0;margin-bottom:22px}
+#bulkRecipePanel .bulk-drop-field{margin-bottom:16px}
 #bulkRecipePanel .scroll{margin-top:0!important}
 #bulkRecipePanel .bulk-results{margin-top:22px}
 #bulkRecipePanel .bulk-footnote{margin-top:20px}
@@ -1056,10 +1057,10 @@ tbody tr:hover{background:#fff8ef}
   <div class="callout bulk-intro">요리를 먼저 선택해 주세요. 선택한 요리에 필요한 재료만 입력할 수 있으며, 다른 요리의 재료는 목록이나 잔여 재고에 표시되지 않습니다. 1세트는 64개, 1셜커는 1,728개이며 농작물 포대는 1포대당 농작물 9개입니다. 가격 미등록 재료는 0원으로 계산하지 않습니다.</div>
   <div class="panel bulk-panel" id="bulkRecipePanel">
    <div class="field bulk-recipe-select"><label for="bcalcRecipe">제작할 요리</label><select id="bcalcRecipe"></select></div>
-   <div class="field" style="max-width:300px;margin-top:14px"><label for="bcalcDouble">공통 2배 드롭 확률 (%)</label><input id="bcalcDouble" type="number" min="0" max="100" step="0.1"></div>
+   <div class="field bulk-drop-field" style="max-width:300px;margin-top:14px"><label for="bcalcDouble">공통 2배 드롭 확률 (%)</label><input id="bcalcDouble" type="number" min="0" max="100" step="0.1"></div>
    <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>재료</th><th>조달</th><th>구매 단위</th><th>수량</th><th>가공 후 예상 수량</th><th>요리 필요량</th><th>제작 후 잔량</th><th>구매 비용</th></tr></thead><tbody id="bcalcRawRows"></tbody></table></div>
    <div class="bulk-results" id="bcalcResults" aria-live="polite"></div>
-   <p class="sub bulk-footnote">※ 물고기는 1마리당 기본 생선살 2개, 농작물·과일은 기본 1개를 생산하고 공통 2배 확률을 적용합니다. 소금은 철 블록 1개당 18개이며 2배 확률은 적용되지 않습니다. 정제수·벌집 조각·각얼음은 가공 없이 재료로 계산합니다. 제작 가능 수량은 예상 생산량 기준의 정수입니다.</p>
+   <p class="sub bulk-footnote">※ 물고기는 1마리당 기본 생선살 2개, 농작물·과일은 기본 1개를 생산하고 공통 2배 확률을 적용합니다. 소금은 철 블록 1개당 18개이며 2배 확률은 적용되지 않습니다.<br>※ 정제수·벌집 조각·각얼음은 가공 없이 재료로 계산합니다.<br>※ 제작 가능 수량은 예상 생산량 기준의 정수입니다.<br>※ 2배 드롭 확률 계산에서 소수점이 생기면 실제 보유 가능한 수량에 맞춰 소수점 아래는 버립니다.</p>
   </div>
  </section>
  <section id="prices" class="view hidden">
@@ -1647,6 +1648,7 @@ function bcCalc(){
  items.forEach(x=>{
   const d=bcRead(x),raw=d.qty*d.unit,price=bcPrice(x),purchase=d.source==='직접 수급'?0:(price==null?null:price*raw);
   let output=raw*x.y;if(['crop','fish','fruit'].includes(x.kind))output*=1+chance;
+  output=Math.floor(output);
   const perOutputCost=d.source==='직접 수급'?0:(price==null?null:(price*raw)/(output||1));
   const need=needs[x.out],possible=Math.floor(output/need),left=Math.max(0,output-possible*need);
   max=Math.min(max,possible);

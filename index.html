@@ -1052,20 +1052,15 @@ tbody tr:hover{background:#fff8ef}
   <div id="recipeCards" class="grid"></div>
  </section>
  <section id="bulk" class="view hidden">
-  <div class="section-head"><div><h2>📦 원물 대량 구매 · 요리 수익 계산</h2><p>구매한 원물의 수량부터 가공 수율, 제작 가능 요리, 매출과 잔여 재고까지 한 번에 계산합니다.</p></div></div>
-  <div class="callout bulk-intro">구매 단위는 기본 1세트 64개 · 1셜커 1,728개입니다. 농작물 포대는 1포대당 원물 9개로 환산합니다. 가격이 등록되지 않은 재료는 비용·순수익을 임의로 0원 처리하지 않습니다.</div>
-  <div class="panel bulk-panel">
-   <h3>① 원물 구매 및 가공 설정</h3>
-   <p class="sub">구매할 원물을 선택하고 수량을 입력하세요. 직접 수급은 구매 비용 0원이며, 구매 단가가 미등록인 원물은 수량과 생산량만 계산합니다.</p>
-   <div class="scroll"><table class="price-table"><thead><tr><th>구매 원물</th><th>조달</th><th>구매 단위</th><th>수량</th><th>가공 결과</th><th>구매 비용</th></tr></thead><tbody id="bulkRawRows"></tbody></table></div>
-   <div class="field" style="max-width:300px;margin-top:14px"><label for="bulkDoubleRate">공통 2배 드롭 확률 (%)</label><input id="bulkDoubleRate" type="number" min="0" max="100" step="0.1"></div>
-  </div>
-  <div class="panel bulk-panel" style="margin-top:18px">
-   <h3>② 제작 요리 선택</h3>
+  <div class="section-head"><div><h2>📦 대량 구매 계산</h2><p>세트·셜커 단위로 구매한 재료의 판매 수익과, 해당 재료로 만들 수 있는 요리의 예상 수익을 계산합니다.</p></div></div>
+  <div class="callout bulk-intro">1세트는 64개, 1셜커는 1,728개 기준입니다. 재료 구매 원가는 가격 관리의 내 구매가·조달 방식과 연동됩니다. 직접 채집 재료는 구매 비용 0원으로 계산됩니다.</div>
+  <div class="panel bulk-panel" id="bulkRecipePanel">
+   <h3>🍳 요리 가공 판매</h3>
+   <p class="sub">요리를 선택하고 재료별 조달 방식과 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다. 구매를 선택하면 가격 관리의 내 구매가를 적용하고, 직접 수급은 0원으로 계산합니다.</p>
    <div class="field bulk-recipe-select"><label for="bulkRecipeSelect">제작할 요리</label><select id="bulkRecipeSelect"></select></div>
-   <div class="scroll" style="margin-top:14px"><table class="price-table"><thead><tr><th>가공 재료</th><th>요리 1개 필요량</th><th>가공 후 보유량</th><th>제작 후 잔량</th><th>잔여 재고 가치</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
+   <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>필요 재료</th><th>조달 방식</th><th>구매 단위</th><th>수량</th><th>예상 구매 비용</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
    <div class="bulk-results" id="bulkRecipeResults" aria-live="polite"></div>
-   <p class="sub bulk-footnote">※ 생선은 원물 1개당 기본 생선살 2개, 농작물과 과일은 기본 1개를 생산하며 공통 2배 확률을 적용합니다. 소금은 철 블록 1개당 18개 생산하며 2배 확률을 적용하지 않습니다. 정제수·벌집 조각·각얼음은 직접 재료로 계산합니다.</p>
+   <p class="sub bulk-footnote">※ 구매로 조달한 재료만 구매 비용에 포함하고, 직접 수급한 재료는 0원으로 계산합니다. 구매한 재료 전체의 비용을 차감해 계산합니다. 제작 후 남은 재료는 재고로 남으며, 남은 재료의 가치는 순수익에 별도로 더하지 않습니다. 2배 드롭이 적용되는 재료는 가격 관리의 확률을 반영한 예상 원가를 사용합니다.</p>
   </div>
  </section>
  <section id="prices" class="view hidden">
@@ -1605,84 +1600,96 @@ $('#savePrices').addEventListener('click',()=>{
 $('#clearOverrides').addEventListener('click',()=>{
  showHamzziConfirm('내 가격을 초기화할까요?','저장한 내 가격과 조달 설정이 모두 기본값으로 돌아가요. 이 작업은 되돌릴 수 없어요.',()=>{
   overrides={};cropPackOverrides={};cropShulkerOverrides={};sources={};cookingDouble=0;waterCost=64;fishShulkerPrice=460000;ironBlockSetPrice=80000;
-  ['econOverrides','cropPackOverrides','cropShulkerOverrides','econSources','cconst BULK_RAW_ITEMS=[
- {id:'flour',label:'밀짚 포대',kind:'crop',index:0,out:'flour',yield:9},
- {id:'beet',label:'비트 포대',kind:'crop',index:1,out:'beet',yield:9},
- {id:'potato',label:'감자 포대',kind:'crop',index:2,out:'potato',yield:9},
- {id:'carrot',label:'당근 포대',kind:'crop',index:3,out:'carrot',yield:9},
- {id:'pumpkin',label:'호박 포대',kind:'crop',index:4,out:'pumpkin',yield:9},
- {id:'watermelon',label:'수박 포대',kind:'crop',index:5,out:'watermelon',yield:9},
- {id:'jam',label:'달콤한 열매 포대',kind:'crop',index:6,out:'jam',yield:9},
- {id:'cocoa',label:'코코아 콩 포대',kind:'crop',index:7,out:'cocoa',yield:9},
- {id:'apple',label:'사과 포대',kind:'crop',index:8,out:'apple',yield:9},
- {id:'sugar',label:'사탕수수 포대',kind:'crop',index:9,out:'sugar',yield:9},
- {id:'fish',label:'생선 원물',kind:'fish',out:'fish',yield:2},
- {id:'iron',label:'철 블록',kind:'iron',out:'salt',yield:18},
- {id:'fruit',label:'과일 원물',kind:'fruit',out:'fruitmix',yield:1},
- {id:'water',label:'정제수',kind:'direct',out:'water',yield:1},
- {id:'honey',label:'벌집 조각',kind:'direct',out:'honey',yield:1},
- {id:'ice',label:'각얼음',kind:'direct',out:'ice',yield:1}
-];
-const bulkName={flour:'밀가루',beet:'비트',potato:'감자',carrot:'당근',pumpkin:'호박',watermelon:'수박',jam:'달콤한 열매',cocoa:'코코아 콩',apple:'사과',sugar:'설탕',fish:'손질된 생선살',salt:'소금',fruitmix:'과일 믹스',water:'정제수',honey:'벌집 조각',ice:'각얼음'};
-const bulkEl=id=>document.getElementById(id);
-const bulkFmt=n=>Math.round(n).toLocaleString('ko-KR');
-const bulkMoney=n=>n==null?'가격 미등록':bulkFmt(n)+'원';
-const bulkFlatten=(recipe,qty,out,stack)=>{
- for(const pair of recipe.ingredients){const k=pair[0],v=pair[1]*qty;if(k.charAt(0)==='@'){const nested=recipes.find(r=>r.id===k.slice(1));if(nested&&!stack.includes(nested.id))bulkFlatten(nested,v,out,stack.concat(nested.id));}else out[k]=(out[k]||0)+v;}
- return out;
-};
-const bulkRecipeNeeds=recipe=>bulkFlatten(recipe,1,{},[recipe.id]);
-const bulkDefaultSource=item=>item.kind==='crop'?cropProcurement(cropPacks[item.index][0],item.index):item.kind==='fish'||item.kind==='iron'?procurementSourceForItem(item.kind==='fish'?'fish':'salt'):item.kind==='direct'?procurementSourceForItem(item.id):'구매';
-const bulkUnitOptions=(item,unit)=>item.kind==='crop'?'<option value="64" '+(unit===64?'selected':'')+'>1세트 (64포대)</option><option value="1728" '+(unit===1728?'selected':'')+'>1셜커 (1,728포대)</option>':item.kind==='fruit'?'<option value="576" '+(unit===576?'selected':'')+'>1세트 (576개)</option><option value="15552" '+(unit===15552?'selected':'')+'>1셜커 (15,552개)</option>':'<option value="64" '+(unit===64?'selected':'')+'>1세트 (64개)</option><option value="1728" '+(unit===1728?'selected':'')+'>1셜커 (1,728개)</option>';
-const bulkUnitPrice=item=>{
- if(item.kind==='crop')return effectiveCropSetPrice(item.index)/64;
- if(item.kind==='fish')return fishShulkerPrice/1728;
- if(item.kind==='iron')return ironBlockSetPrice/64;
- if(item.kind==='water')return waterCost/64;
- if(item.kind==='fruit')return null;
- if(item.kind==='direct')return item.id==='water'?waterCost/64:null;
- return null;
-};
-const bulkSaved=JSON.parse(localStorage.getItem('hamzziBulkRaw_v2')||'{}');
-const bulkRead=item=>{const old=bulkSaved[item.id]||{};return {source:old.source||bulkDefaultSource(item),unit:Number(old.unit)|| (item.kind==='fruit'?15552:1728),qty:Math.max(0,Number(old.qty)||0)};};
-const bulkRows=bulkEl('bulkRawRows');
-const bulkRecipeSelect=bulkEl('bulkRecipeSelect');
-const bulkRecipeRows=bulkEl('bulkRecipeRows');
-const bulkResults=bulkEl('bulkRecipeResults');
-const bulkRate=bulkEl('bulkDoubleRate');
-if(bulkRows&&bulkRecipeSelect&&bulkRecipeRows&&bulkResults){
- bulkRate.value=Number(cookingDouble)||0;
- bulkRecipeSelect.innerHTML=recipes.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');
- bulkRecipeSelect.value=recipes[0]?recipes[0].id:'';
- const bulkRenderRaw=()=>{
-  bulkRows.innerHTML=BULK_RAW_ITEMS.map(item=>{const v=bulkRead(item),unitPrice=bulkUnitPrice(item);return '<tr><td><b>'+item.label+'</b><small style="display:block;color:var(--muted)">'+bulkName[item.out]+' 생산</small></td><td><select data-bulk-source="'+item.id+'"><option value="구매" '+(v.source==='구매'?'selected':'')+'>구매</option><option value="직접 수급" '+(v.source!=='구매'?'selected':'')+'>직접 수급</option></select></td><td><select data-bulk-unit="'+item.id+'">'+bulkUnitOptions(item,v.unit)+'</select></td><td><input type="number" min="0" step="1" value="'+v.qty+'" data-bulk-qty="'+item.id+'"></td><td data-bulk-yield="'+item.id+'">-</td><td data-bulk-cost="'+item.id+'">'+(v.source!=='구매'?'0원':bulkMoney(unitPrice==null?null:unitPrice*v.unit*v.qty))+'</td></tr>';}).join('');
-  bulkCalculate();
- };
- const bulkGetInput=item=>{const q=bulkRows.querySelector('[data-bulk-qty="'+item.id+'"]'),u=bulkRows.querySelector('[data-bulk-unit="'+item.id+'"]'),s=bulkRows.querySelector('[data-bulk-source="'+item.id+'"]');return {qty:Math.max(0,Math.floor(Number(q&&q.value)||0)),unit:Number(u&&u.value)||1728,source:s?s.value:'구매'};};
- const bulkInventory=()=>{const inventory={},costs={},unknown=[];let totalCost=0,unknownCost=false;for(const item of BULK_RAW_ITEMS){const v=bulkGetInput(item),raw=v.qty*v.unit,rate=Math.max(0,Math.min(100,Number(bulkRate.value)||0))/100;let produced=raw*item.yield;if(item.kind==='crop'||item.kind==='fish'||item.kind==='fruit')produced*=1+rate;inventory[item.out]=(inventory[item.out]||0)+produced;const price=bulkUnitPrice(item),cost=v.source==='직접 수급'?0:price==null?null:price*raw;costs[item.id]=cost;if(v.source==='구매'&&cost==null&&raw>0){unknown.push(item.label);unknownCost=true;}else if(cost!=null)totalCost+=cost;const y=bulkRows.querySelector('[data-bulk-yield="'+item.id+'"]'),c=bulkRows.querySelector('[data-bulk-cost="'+item.id+'"]');if(y)y.textContent=bulkFmt(produced)+' '+(item.out==='salt'?'개':'개');if(c)c.textContent=v.source==='직접 수급'?'0원 (직접 수급)':bulkMoney(cost);}return {inventory,costs,totalCost:unknownCost?null:totalCost,unknown};};
- const bulkCalculate=()=>{
-  const inv=bulkInventory(),recipe=recipes.find(r=>r.id===bulkRecipeSelect.value)||recipes[0];if(!recipe)return;
-  const needs=bulkRecipeNeeds(recipe);let max=Infinity;for(const [id,need] of Object.entries(needs))max=Math.min(max,Math.floor((inv.inventory[id]||0)/need));if(!Number.isFinite(max))max=0;
-  const revenue=max*recipe.sale;let consumedCost=0,consumedUnknown=false;
-  for(const [id,need] of Object.entries(needs)){const used=max*need;const relevant=BULK_RAW_ITEMS.filter(x=>x.out===id);let remaining=inv.inventory[id]||0;for(const item of relevant){const amount=bulkGetInput(item).qty*bulkGetInput(item).unit*item.yield*(item.kind==='crop'||item.kind==='fish'||item.kind==='fruit'?1+Math.max(0,Math.min(100,Number(bulkRate.value)||0))/100:1);remaining-=Math.min(used,amount);if(bulkGetInput(item).source==='구매'&&bulkUnitPrice(item)==null&&amount>0)consumedUnknown=true;else if(bulkUnitPrice(item)!=null&&bulkGetInput(item).source==='구매')consumedCost+=Math.min(used,amount)*bulkUnitPrice(item)/item.yield/(item.kind==='crop'||item.kind==='fish'||item.kind==='fruit'?1+Math.max(0,Math.min(100,Number(bulkRate.value)||0))/100:1);}
-  }
-  const profit=consumedUnknown?null:revenue-consumedCost;
-  let leftovers='',leftValue=0,leftUnknown=false;
-  for(const id of Object.keys(inv.inventory)){const need=needs[id]||0;const remain=Math.max(0,inv.inventory[id]-max*need);if(remain<=0)continue;const sources=BULK_RAW_ITEMS.filter(x=>x.out===id);let known=true,value=0;for(const item of sources){const v=bulkGetInput(item);if(v.source==='구매'){const p=bulkUnitPrice(item);if(p==null){known=false;leftUnknown=true;}else value+=remain*p/item.yield/(item.kind==='crop'||item.kind==='fish'||item.kind==='fruit'?1+Math.max(0,Math.min(100,Number(bulkRate.value)||0))/100:1);}}if(!known)leftovers+='<tr><td>'+ (bulkName[id]||id)+'</td><td>'+bulkFmt(remain)+'개</td><td>가격 미등록</td></tr>';else{leftValue+=value;leftovers+='<tr><td>'+(bulkName[id]||id)+'</td><td>'+bulkFmt(remain)+'개</td><td>'+bulkMoney(value)+'</td></tr>';}}
-  if(!leftovers)leftovers='<tr><td colspan="3">남는 가공 재료가 없습니다.</td></tr>';
-  const totalCostText=bulkMoney(inv.totalCost),profitText=bulkMoney(profit),cash=inv.totalCost==null?null:revenue-inv.totalCost;
-  bulkRecipeRows.innerHTML=Object.entries(needs).map(([id,n])=>{const amount=inv.inventory[id]||0,remain=Math.max(0,amount-max*n);let val=0,unknown=false;for(const item of BULK_RAW_ITEMS.filter(x=>x.out===id)){const v=bulkGetInput(item);if(v.source==='구매'){const p=bulkUnitPrice(item);if(p==null&&remain>0)unknown=true;else if(p!=null)val+=remain*p/item.yield/(item.kind==='crop'||item.kind==='fish'||item.kind==='fruit'?1+Math.max(0,Math.min(100,Number(bulkRate.value)||0))/100:1);}}return '<tr><td>'+(bulkName[id]||id)+'</td><td>'+bulkFmt(n)+'개</td><td>'+bulkFmt(amount)+'개</td><td>'+bulkFmt(remain)+'개</td><td>'+(unknown?'가격 미등록':bulkMoney(val))+'</td></tr>';}).join('');
-  bulkResults.innerHTML='<div class="bulk-result"><small>가공 후 재료 총량</small><strong>'+bulkFmt(Object.values(inv.inventory).reduce((a,b)=>a+b,0))+'개</strong></div><div class="bulk-result"><small>제작 가능 요리</small><strong>'+bulkFmt(max)+'개</strong></div><div class="bulk-result"><small>예상 판매 매출</small><strong>'+bulkMoney(revenue)+'</strong></div><div class="bulk-result"><small>원물 총 구매 비용</small><strong>'+totalCostText+'</strong></div><div class="bulk-result"><small>요리 소모 재료 원가</small><strong>'+bulkMoney(consumedUnknown?null:consumedCost)+'</strong></div><div class="bulk-result '+(profit!=null&&profit>=0?'profit-result':'loss-result')+'"><small>예상 순수익 (매출 - 소모 원가)</small><strong>'+profitText+'</strong></div><div class="bulk-result"><small>매출 - 원물 구매 비용</small><strong>'+bulkMoney(cash)+'</strong></div><div class="bulk-result"><small>남은 재고 가치</small><strong>'+ (leftUnknown?'일부 가격 미등록':bulkMoney(leftValue))+'</strong></div><div class="bulk-result" style="grid-column:1/-1"><small>제작 후 남는 가공 재료</small><div class="scroll"><table><thead><tr><th>재료</th><th>잔량</th><th>재고 가치</th></tr></thead><tbody>'+leftovers+'</tbody></table></div></div>'+(inv.unknown.length?'<p class="sub" style="grid-column:1/-1;color:#b56b68">구매 가격 미등록: '+inv.unknown.join(', ')+' · 해당 원물의 구매 비용 및 순수익은 가격 등록 전까지 계산할 수 없습니다.</p>':'');
- };
- const bulkSave=()=>{const data={};for(const item of BULK_RAW_ITEMS)data[item.id]=bulkGetInput(item);localStorage.setItem('hamzziBulkRaw_v2',JSON.stringify(data));};
- bulkRows.addEventListener('input',()=>{bulkSave();bulkCalculate();});
- bulkRows.addEventListener('change',()=>{bulkSave();bulkCalculate();});
- bulkRate.addEventListener('input',()=>{cookingDouble=Math.max(0,Math.min(100,Number(bulkRate.value)||0));localStorage.setItem('cookingDouble',String(cookingDouble));bulkCalculate();});
- bulkRecipeSelect.addEventListener('change',bulkCalculate);
- document.addEventListener('price-settings-saved',()=>{bulkRenderRaw();});
- bulkRenderRaw();
+  ['econOverrides','cropPackOverrides','cropShulkerOverrides','econSources','cookingDouble','fishDouble','generalDouble','waterCost','fishShulkerPrice','ironBlockSetPrice',PRICE_DRAFT_KEY].forEach(k=>localStorage.removeItem(k));
+  renderPrices();refresh();
+  showHamzziNotice('내 가격을 초기화했어요!','내 가격과 조달 설정이 기본값으로 복원됐어요. 기본 가격으로 다시 계산했어요.','초기화 완료');
+ },'초기화 확인');
+});
+$('#resetBtn').addEventListener('click',()=>$('#clearOverrides').click());
+renderPrices();refresh();
+const BULK_STOCK_KEY='hamzziHouseBulkStock_v1';
+const BULK_DRAFT_KEY='hamzziHouseBulkDraft_v1';
+const bulkIds=[...new Set(recipes.flatMap(r=>Object.keys(flattenBulkIngredients(r,1,[r.id]))))];
+let bulkStock=JSON.parse(localStorage.getItem(BULK_STOCK_KEY)||'{}');
+let bulkDraft=JSON.parse(localStorage.getItem(BULK_DRAFT_KEY)||'{}');
+let bulkSelectedRecipe=null;
+const bulkDefault=(id)=>({source:procurementSourceForItem(id)==='구매'?'구매':'직접 수급',unitPrice:itemPrice(id)??0,unit:1728,qty:0});
+const bulkFmt=n=>n==null?'가격 확인 필요':Math.round(n).toLocaleString('ko-KR')+'원';
+function bulkCost(id){const row=bulkDraft[id]||bulkDefault(id);if(row.source==='직접 수급')return 0;return Math.max(0,Number(row.unitPrice)||0);}
+function bulkInventoryRows(){
+ $('#bulkInventoryRows').innerHTML=bulkIds.map(id=>{
+  const row={...bulkDefault(id),...(bulkDraft[id]||{})}, stock=Math.max(0,Number(bulkStock[id]?.qty)||0),cost=Number(row.qty||0)*Number(row.unit||1728)*Number(row.unitPrice||0);
+  return '<tr><td><b>'+itemName(id)+'</b></td><td><select data-bulk-source="'+id+'"><option '+(row.source==='구매'?'selected':'')+'>구매</option><option '+(row.source!=='구매'?'selected':'')+'>직접 수급</option></select></td><td><input type="number" min="0" step="0.01" value="'+(row.unitPrice??0)+'" data-bulk-price="'+id+'" aria-label="'+itemName(id)+' 개당 구매가"></td><td><select data-bulk-unit="'+id+'"><option value="64" '+(Number(row.unit)===64?'selected':'')+'>세트 (64개)</option><option value="1728" '+(Number(row.unit)!==64?'selected':'')+'>셜커 (1,728개)</option></select></td><td><input type="number" min="0" step="1" value="'+(row.qty??0)+'" data-bulk-qty="'+id+'" aria-label="'+itemName(id)+' 구매 수량"></td><td>'+bulkFmt(cost)+'</td><td>'+stock.toLocaleString('ko-KR')+'개</td></tr>';
+ }).join('');
 }
-istener('input',e=>{if(e.target.matches('[data-bulk-qty],[data-bulk-price]')){saveBulkDraftFromUI();localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));}});
+function saveBulkDraftFromUI(){
+ bulkIds.forEach(id=>{
+  const get=sel=>document.querySelector(sel+'[data-'+sel.slice(1).split('[')[0]+'="'+id+'"]');
+  const source=document.querySelector('[data-bulk-source="'+id+'"]')?.value||'직접 수급';
+  const unit=Number(document.querySelector('[data-bulk-unit="'+id+'"]')?.value)||1728;
+  const qty=Math.max(0,Math.floor(Number(document.querySelector('[data-bulk-qty="'+id+'"]')?.value)||0));
+  const unitPrice=Math.max(0,Number(document.querySelector('[data-bulk-price="'+id+'"]')?.value)||0);
+  bulkDraft[id]={source,unit,qty,unitPrice};
+ });
+}
+function renderBulkRanking(){
+ const list=recipes.map(r=>{
+  const ing=flattenBulkIngredients(r,1,[r.id]);let possible=Infinity,valid=true,costPer=0;
+  Object.entries(ing).forEach(([id,need])=>{
+   const available=Math.max(0,Number(bulkStock[id]?.qty)||0);
+   possible=Math.min(possible,Math.floor(available/need));
+   const c=bulkCost(id);if(c==null||!Number.isFinite(c))valid=false;else costPer+=c*need;
+  });
+  if(!Number.isFinite(possible))possible=0;
+  const profit=r.sale==null?null:r.sale-costPer;
+  return {r,ing,possible,costPer,profit,valid,revenue:r.sale==null?null:possible*r.sale,totalProfit:r.sale==null?null:possible*profit};
+ }).sort((a,b)=>(b.profit??-Infinity)-(a.profit??-Infinity));
+ $('#bulkRecipeRanking').innerHTML=list.map((x,i)=>'<button type="button" class="bulk-rank-card" data-bulk-open="'+x.r.id+'"><span class="bulk-rank-no">'+(i+1)+'</span><span class="bulk-rank-main"><b>'+x.r.name+'</b><small>단독 제작 최대 '+x.possible.toLocaleString('ko-KR')+'개 · 개당 순수익 '+(x.profit==null?'판매가 미등록':bulkFmt(x.profit))+'</small><small>최대 제작 시 매출 '+bulkFmt(x.revenue)+' · 순수익 '+bulkFmt(x.totalProfit)+'</small></span><span class="bulk-rank-arrow">›</span></button>').join('');
+}
+function openBulkRecipe(id){
+ const r=recipes.find(x=>x.id===id);if(!r)return;bulkSelectedRecipe=id;
+ const ing=flattenBulkIngredients(r,1,[r.id]);let possible=Infinity,costPer=0,valid=true;
+ Object.entries(ing).forEach(([key,need])=>{const have=Math.max(0,Number(bulkStock[key]?.qty)||0);possible=Math.min(possible,Math.floor(have/need));const c=bulkCost(key);if(c==null)valid=false;else costPer+=c*need;});
+ if(!Number.isFinite(possible))possible=0;
+ const revenue=r.sale==null?null:possible*r.sale,profit=valid&&revenue!=null?revenue-costPer*possible:null;
+ $('#bulkRecipeRanking').parentElement.classList.add('hidden');$('#bulkRecipeDetail').classList.remove('hidden');
+ $('#bulkDetailTitle').textContent=r.name+' 대량 제작 상세';$('#bulkDetailSubtitle').textContent='현재 보유 재고 기준 단독 제작 가능 수량: '+possible.toLocaleString('ko-KR')+'개';
+ $('#bulkDetailIngredients').innerHTML='<table class="price-table"><thead><tr><th>재료</th><th>필요 수량</th><th>현재 보유량</th><th>제작 후 잔여량</th><th>조달 기준</th></tr></thead><tbody>'+Object.entries(ing).map(([key,need])=>{const have=Math.max(0,Number(bulkStock[key]?.qty)||0),used=possible*need;return '<tr><td>'+itemName(key)+'</td><td>'+used.toLocaleString('ko-KR')+'개 ('+need+'/개)</td><td>'+have.toLocaleString('ko-KR')+'개</td><td>'+Math.max(0,have-used).toLocaleString('ko-KR')+'개</td><td>'+(bulkDraft[key]?.source||bulkDefault(key).source)+'</td></tr>';}).join('')+'</tbody></table>';
+ const consumedCost=Object.entries(ing).reduce((sum,[key,need])=>{const stock=bulkStock[key]||{};const have=Math.max(0,Number(stock.qty)||0);const avg=have>0?(Number(stock.cost)||0)/have:bulkCost(key);return sum+(avg==null?0:avg)*need*possible;},0);
+ const remainingValue=Object.entries(ing).reduce((sum,[key,need])=>{const stock=bulkStock[key]||{};const have=Math.max(0,Number(stock.qty)||0);const avg=have>0?(Number(stock.cost)||0)/have:0;return sum+Math.max(0,have-need*possible)*avg;},0);
+ const totalPurchasedCost=Object.values(bulkStock).reduce((sum,stock)=>sum+(Number(stock.cost)||0),0);
+ const cashDifference=revenue==null?null:revenue-totalPurchasedCost;
+ $('#bulkDetailResults').innerHTML=bulkResult('제작 가능 수량',possible.toLocaleString('ko-KR')+'개')+bulkResult('예상 판매 매출',bulkFmt(revenue))+bulkResult('실제 소비 재료 원가',bulkFmt(consumedCost))+bulkResult('예상 순수익',bulkFmt(revenue==null?null:revenue-consumedCost),revenue==null?'':revenue-consumedCost>=0?'profit-result':'loss-result')+bulkResult('총 원물·재료 구매 비용',bulkFmt(totalPurchasedCost))+bulkResult('남은 재료 재고 가치',bulkFmt(remainingValue))+bulkResult('전체 구매 비용 회수 후 현금 차액',bulkFmt(cashDifference),cashDifference==null?'':cashDifference>=0?'profit-result':'loss-result');
+ $('#bulkMakeQty').value=Math.max(1,possible);
+}
+function renderBulkAll(){bulkInventoryRows();renderBulkRanking();}
+function bulkConfirmSave(){
+ saveBulkDraftFromUI();
+ const additions={};bulkIds.forEach(id=>{const row=bulkDraft[id],amount=Math.max(0,Number(row.qty)||0)*Math.max(1,Number(row.unit)||1728);if(amount>0)additions[id]=amount;});
+ if(!Object.keys(additions).length){showHamzziNotice('구매 수량을 입력해 주세요','재고에 추가할 구매 수량이 없어요. 재료별 구매 수량을 입력한 뒤 다시 눌러 주세요.','입력 안내');return;}
+ showHamzziConfirm('구매 수량을 저장할까요?','입력한 재료 구매 수량을 현재 보유 재고에 더합니다. 저장 후에는 요리별 제작 가능 수량과 예상 수익이 다시 계산돼요.',()=>{
+  bulkIds.forEach(id=>{const amount=additions[id]||0;if(!amount)return;const old=bulkStock[id]||{qty:0,cost:0};const oldQty=Number(old.qty)||0;const addCost=bulkDraft[id].source==='구매'?amount*(Number(bulkDraft[id].unitPrice)||0):0;bulkStock[id]={qty:oldQty+amount,cost:(Number(old.cost)||0)+addCost};bulkDraft[id].qty=0;});
+  localStorage.setItem(BULK_STOCK_KEY,JSON.stringify(bulkStock));localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));renderBulkAll();
+  showHamzziNotice('구매 수량을 저장했어요!','재료가 보유 재고에 추가됐어요. 요리 추천 순위와 제작 가능 수량을 확인해 보세요.','저장 완료');
+ },'구매 수량 저장 확인');
+}
+function resetBulkStock(){
+ showHamzziConfirm('보유 재고를 초기화할까요?','저장된 재료 재고가 모두 삭제됩니다. 이 작업은 되돌릴 수 없어요.',()=>{bulkStock={};localStorage.removeItem(BULK_STOCK_KEY);renderBulkAll();showHamzziNotice('보유 재고를 초기화했어요!','저장된 재료 재고를 모두 비웠어요.','초기화 완료');},'재고 초기화 확인');
+}
+$('#bulkSavePurchase').addEventListener('click',bulkConfirmSave);
+$('#bulkResetStock').addEventListener('click',resetBulkStock);
+$('#bulkDetailBack').addEventListener('click',()=>{$('#bulkRecipeDetail').classList.add('hidden');$('#bulkRecipeRanking').parentElement.classList.remove('hidden');});
+$('#bulkMakeRecipe').addEventListener('click',()=>{
+ const r=recipes.find(x=>x.id===bulkSelectedRecipe);if(!r)return;const qty=Math.max(0,Math.floor(Number($('#bulkMakeQty').value)||0));if(!qty)return;
+ const ing=flattenBulkIngredients(r,1,[r.id]);const lacking=Object.entries(ing).filter(([id,n])=>(Number(bulkStock[id]?.qty)||0)<n*qty);
+ if(lacking.length){showHamzziNotice('재료가 부족해요',''+lacking.map(([id,n])=>itemName(id)+' '+Math.max(0,n*qty-(Number(bulkStock[id]?.qty)||0))+'개 부족').join(', ')+' 부족합니다. 구매 수량을 추가해 주세요.','재료 부족 안내');return;}
+ showHamzziConfirm(r.name+' '+qty.toLocaleString('ko-KR')+'개를 제작할까요?','제작에 필요한 재료를 보유 재고에서 차감합니다. 차감 후 남은 재료는 다음 제작에 사용할 수 있어요.',()=>{
+  Object.entries(ing).forEach(([id,n])=>{bulkStock[id].qty-=n*qty;if(bulkStock[id].qty<=0)delete bulkStock[id];});
+  localStorage.setItem(BULK_STOCK_KEY,JSON.stringify(bulkStock));renderBulkAll();openBulkRecipe(r.id);showHamzziNotice('요리 제작을 반영했어요!','제작 수량만큼 재료를 차감하고 남은 재료를 보유 재고에 저장했어요.','제작 완료');
+ },'요리 제작 확인');
+});
+document.addEventListener('click',e=>{const card=e.target.closest('[data-bulk-open]');if(card)openBulkRecipe(card.dataset.bulkOpen);});
+document.addEventListener('input',e=>{if(e.target.matches('[data-bulk-qty],[data-bulk-price]')){saveBulkDraftFromUI();localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-bulk-source],[data-bulk-unit]')){saveBulkDraftFromUI();localStorage.setItem(BULK_DRAFT_KEY,JSON.stringify(bulkDraft));renderBulkAll();}});
 renderBulkAll();
 const savedTab=location.hash.slice(1)||'dashboard';
@@ -1703,7 +1710,125 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
 </div>
 
 
+<script>
+(()=>{
+ const tips=[
+  {name:'하리의 소금 만들기 팁',text:'물 양동이를 화로에서 구우면 소금 6개를 얻을 수 있어! 단, 소금으로 가공되면 철 양동이는 사라지니까 참고해 줘.'},
+  {name:'몽은의 2배 드롭 확률 팁',text:'식칼 아이템 설명을 열어 요리재료 2배 드롭 확률을 확인해 봐! 이 확률은 생선과 농작물 재료에 공통으로 적용돼.'},
+  {name:'쿠리의 생선 손질 팁',text:'생선 1마리를 손질하면 기본적으로 생선살 2개를 얻을 수 있어! 2배 드롭 확률에 따라 기대 생산량이 달라진다는 것도 기억해 줘.'},
+  {name:'몽시의 예상 원가 팁',text:'2배 드롭은 개인별 손질 횟수와 성공 횟수에 따라 실제 획득량이 달라져. 계산기에 표시되는 원가는 설정 확률을 반영한 예상 원가라 실제 원가와 차이가 날 수 있어!'},
+  {name:'달의 요정 드롭 확률 팁',text:'요정의 드롭 확률이 궁금하다면 인게임에서 요정에게 커서를 올려 확인해 봐! 표시되는 확률을 참고하면 돼.'},
+  {name:'체다의 농작물 포대 팁',text:'포대 1개에는 농작물 9개가 들어가고, 1세트는 포대 64개야. 즉 농작물 1세트는 총 576개! 계산기에는 밀짚, 비트, 감자, 당근, 호박, 수박, 달콤한 열매, 코코아 콩, 사과, 사탕수수 포대가 등록되어 있어.'},
+  {name:'츄의 나만의 가격 설정 팁',text:'가격 관리에서 실제 거래하는 가격과 직접 채집·구매 여부를 설정해 봐! 변경한 가격은 가공 재료 단가와 요리 수익에 반영되고, 현재 사용 중인 브라우저에 저장돼.'}
+ ];
+ const grid=document.getElementById('characterTipGrid');
+ const bubble=document.getElementById('characterTipBubble');
+ if(!grid||!bubble)return;
+ const name=document.getElementById('tipBubbleName'),message=document.getElementById('tipBubbleText'),closeButton=document.getElementById('tipBubbleClose');
+ const close=()=>{bubble.hidden=false;name.textContent='';message.textContent='';if(closeButton)closeButton.hidden=true;grid.querySelectorAll('.character-tip').forEach(b=>b.setAttribute('aria-expanded','false'));};
+ grid.addEventListener('click',e=>{
+  const button=e.target.closest('.character-tip');if(!button)return;
+  const index=Number(button.dataset.tip);if(!Number.isInteger(index)||!tips[index])return;
+  const already=button.getAttribute('aria-expanded')==='true'&&!bubble.hidden;
+  close();if(already)return;
+  name.textContent=tips[index].name;message.textContent=tips[index].text;if(closeButton)closeButton.hidden=false;
+  button.setAttribute('aria-expanded','true');bubble.hidden=false;
+  // 말풍선 꼭지는 실제로 누른 캐릭터 카드의 중앙을 따라가도록 계산
+  const buttonRect=button.getBoundingClientRect();
+  const bubbleRect=bubble.getBoundingClientRect();
+  const arrowX=buttonRect.left+buttonRect.width/2-bubbleRect.left;
+  const arrowInset=18;
+  const arrowLeft=Math.max(arrowInset,Math.min(bubbleRect.width-arrowInset,arrowX));
+  bubble.style.setProperty('--bubble-arrow',arrowLeft+'px');
+ });
+ document.getElementById('tipBubbleClose')?.addEventListener('click',close);
+})();
+</script>
 
+
+<script>
+(()=> {
+ const select=document.getElementById('bulkRecipeSelect');
+ const rows=document.getElementById('bulkRecipeRows');
+ const results=document.getElementById('bulkRecipeResults');
+ if(!select||!rows||!results)return;
+ const flatten=(recipe,qty=1,out={},stack=[])=>{
+  for(const [key,amount] of recipe.ingredients){
+   const count=amount*qty;
+   if(key.startsWith('@')){
+    const nested=recipes.find(r=>r.id===key.slice(1));
+    if(nested&&!stack.includes(nested.id))flatten(nested,count,out,stack.concat(nested.id));
+   } else out[key]=(out[key]||0)+count;
+  }
+  return out;
+ };
+ const bulkMaterialNames={fish:'생선',flour:'밀짚',potato:'감자',sugar:'사탕수수',beet:'비트',carrot:'당근',cocoa:'코코아 콩',pumpkin:'호박',watermelon:'수박',jam:'달콤한 열매',salt:'소금 원료(철 블록)',fruitmix:'과일 원물'};
+ const bulkMaterialName=id=>bulkMaterialNames[id]||itemName(id);
+ const number=n=>Math.round(n||0).toLocaleString('ko-KR');
+ const unitOptions='<option value="64">1세트 (64개)</option><option value="1728" selected>1셜커 (1,728개)</option>';
+ const render=()=>{
+  const recipe=recipes.find(r=>r.id===select.value)||recipes[0];
+  if(!recipe)return;
+  const needs=flatten(recipe);
+  rows.innerHTML=Object.entries(needs).map(([id,qty])=>{
+   const cropIndex=cropIngredientMap[id];
+   const source=(cropIndex!==undefined?cropProcurement(cropPacks[cropIndex][0],cropIndex):procurementSourceForItem(id))==='구매'?'구매':'직접 채집';
+   return '<tr><td>'+bulkMaterialName(id)+' <small>('+number(qty)+'개 / 요리 1개)</small></td><td><select class="bulk-buy-source" data-item="'+id+'" aria-label="'+bulkMaterialName(id)+' 조달 방식"><option value="구매" '+(source==='구매'?'selected':'')+'>구매</option><option value="직접 채집" '+(source==='직접 채집'?'selected':'')+'>직접 수급</option></select></td><td><select class="bulk-buy-unit" data-item="'+id+'">'+unitOptions+'</select></td><td><input class="bulk-buy-qty" data-item="'+id+'" type="number" min="0" step="1" value="1" aria-label="'+bulkMaterialName(id)+' 수량"></td><td class="bulk-cost-cell" data-item="'+id+'">계산 중</td></tr>';
+  }).join('');
+  calculate();
+ };
+ const calculate=()=>{
+  const recipe=recipes.find(r=>r.id===select.value)||recipes[0];
+  if(!recipe)return;
+  const needs=flatten(recipe);
+  let max=Infinity,totalCost=0,unpriced=[];
+  for(const [id,perRecipe] of Object.entries(needs)){
+   const unit=Number(rows.querySelector('.bulk-buy-unit[data-item="'+id+'"]')?.value||1728);
+   const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0)));
+   const available=unit*qty;
+   max=Math.min(max,Math.floor(available/perRecipe));
+   const source=rows.querySelector('.bulk-buy-source[data-item="'+id+'"]')?.value||'구매';
+   const price=source==='직접 채집'?0:bulkPurchaseUnitPrice(id);
+   const costCell=rows.querySelector('.bulk-cost-cell[data-item="'+id+'"]');
+   if(costCell)costCell.textContent=source==='직접 채집'?'0원 (직접 수급)':(price==null?'가격 미등록':number(price*available)+'원');
+   if(price==null)unpriced.push(bulkMaterialName(id)); else totalCost+=available*price;
+  }
+  if(!Number.isFinite(max))max=0;
+  const revenue=max*recipe.sale;
+  const profit=revenue-totalCost;
+  const remaining=Object.entries(needs).map(([id,perRecipe])=>{
+   const unit=Number(rows.querySelector('.bulk-buy-unit[data-item="'+id+'"]')?.value||1728);
+   const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0)));
+   return '<tr><td>'+bulkMaterialName(id)+'</td><td>'+number(unit*qty-max*perRecipe)+'개</td></tr>';
+  }).join('');
+  results.innerHTML=
+   '<div class="bulk-result"><small>제작 가능 요리 수량</small><strong>'+number(max)+'개</strong></div>'+
+   '<div class="bulk-result"><small>예상 판매 매출</small><strong>'+number(revenue)+'원</strong></div>'+
+   '<div class="bulk-result"><small>재료 구매 비용</small><strong>'+number(totalCost)+'원</strong></div>'+
+   '<div class="bulk-result '+(profit>=0?'profit-result':'loss-result')+'"><small>예상 순수익</small><strong>'+number(profit)+'원</strong></div>'+
+   '<div class="bulk-result" style="grid-column:1/-1"><small>제작 후 남는 재료</small><div class="scroll"><table><tbody>'+remaining+'</tbody></table></div></div>'+
+   (unpriced.length?'<p class="sub" style="grid-column:1/-1;color:#b56b68">가격 미등록 재료: '+[...new Set(unpriced)].join(', ')+' · 미등록 재료는 0원으로 임시 계산했으니 가격 관리에서 확인해 주세요.</p>':'');
+ };
+ select.innerHTML=recipes.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');
+ select.value=recipes[0]?.id||'';
+ select.addEventListener('change',render);
+ document.addEventListener('price-settings-saved',()=>{
+  const recipe=recipes.find(r=>r.id===select.value)||recipes[0];
+  if(!recipe)return;
+  const needs=flatten(recipe);
+  Object.keys(needs).forEach(id=>{
+   const cropIndex=cropIngredientMap[id];
+   const source=cropIndex!==undefined?cropProcurement(cropPacks[cropIndex][0],cropIndex):procurementSourceForItem(id);
+   const control=rows.querySelector('.bulk-buy-source[data-item="'+id+'"]');
+   if(control)control.value=source==='구매'?'구매':'직접 채집';
+  });
+  calculate();
+ });
+ rows.addEventListener('input',calculate);
+ rows.addEventListener('change',calculate);
+ render();
+})();
+</script>
 
 </body>
 </html>

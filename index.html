@@ -969,6 +969,25 @@ tbody tr:hover{background:#fff8ef}
 .character-tip{min-height:140px}
 @media(max-width:680px){.character-tip{flex-basis:104px;min-width:104px}.character-tip img{width:82px;height:82px}.character-tip-bubble{min-height:82px;padding:16px}}
 
+
+/* Bulk purchase calculator */
+.bulk-mode-tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.bulk-mode{border:1px solid #ead9c8;background:#fffaf4;color:#856c59;border-radius:12px;padding:10px 16px;font-weight:800;cursor:pointer}
+.bulk-mode.active{background:#a58a75;border-color:#a58a75;color:#fff}
+.bulk-panel{margin-bottom:16px}
+.bulk-panel h3{margin:0 0 5px;color:#69523f}
+.bulk-fields{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px}
+.bulk-recipe-select{max-width:420px;margin-top:12px}
+.bulk-ingredient-table input,.bulk-ingredient-table select{width:100%;min-width:75px;max-width:120px;padding:7px;border:1px solid #e4d7c9;border-radius:8px;background:#fff}
+.bulk-results{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:16px}
+.bulk-result{background:#fffaf4;border:1px solid #eee0d1;border-radius:12px;padding:12px;min-width:0}
+.bulk-result small{display:block;color:#927f70;font-size:11px;margin-bottom:5px}
+.bulk-result strong{display:block;color:#65513f;font-size:17px;overflow-wrap:anywhere}
+.bulk-result.profit-result strong{color:#65805c}
+.bulk-result.loss-result strong{color:#b56b68}
+.bulk-footnote{margin-top:12px;line-height:1.6}
+@media(max-width:700px){.bulk-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.bulk-results{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.bulk-fields{grid-template-columns:1fr}.bulk-results{grid-template-columns:1fr 1fr}.bulk-result strong{font-size:14px}}
 </style>
 </head>
 <body>
@@ -980,6 +999,7 @@ tbody tr:hover{background:#fff8ef}
  <nav class="tabs" aria-label="메인 메뉴">
   <button class="tab active" data-tab="dashboard">요약 대시보드</button>
   <button class="tab" data-tab="recipes">요리 수익 계산</button>
+  <button class="tab" data-tab="bulk">대량 구매 계산</button>
   <button class="tab" data-tab="prices">가격 관리</button>
   <button class="tab" data-tab="guide">계산 기준</button>
  </nav>
@@ -1020,6 +1040,33 @@ tbody tr:hover{background:#fff8ef}
  <section id="recipes" class="view hidden">
   <div class="section-head"><div><h2>요리 수익 계산</h2><p>요리별 재료 원가와 제작 수량별 판매 금액·순수익·매출 대비 이익률을 확인합니다.</p></div><div class="toolbar"><input id="recipeSearch" placeholder="요리 검색…" aria-label="요리 검색"></div></div>
   <div id="recipeCards" class="grid"></div>
+ </section>
+ <section id="bulk" class="view hidden">
+  <div class="section-head"><div><h2>📦 대량 구매 계산</h2><p>세트·셜커 단위로 구매한 재료의 판매 수익과, 해당 재료로 만들 수 있는 요리의 예상 수익을 계산합니다.</p></div></div>
+  <div class="callout">1세트는 64개, 1셜커는 1,728개 기준입니다. 재료 구매 원가는 가격 관리의 내 구매가·조달 방식과 연동됩니다. 직접 채집 재료는 구매 비용 0원으로 계산됩니다.</div>
+  <div class="bulk-mode-tabs" role="tablist" aria-label="대량 구매 계산 방식">
+   <button type="button" class="bulk-mode active" data-bulk-mode="material">재료 자체 판매</button>
+   <button type="button" class="bulk-mode" data-bulk-mode="recipe">요리 가공 판매</button>
+  </div>
+  <div class="panel bulk-panel" id="bulkMaterialPanel">
+   <h3>🥕 재료 자체 판매</h3>
+   <p class="sub">구매한 재료를 그대로 판매했을 때의 총수량과 매출·수익을 계산합니다.</p>
+   <div class="form-grid bulk-fields">
+    <div class="field"><label for="bulkMaterialSelect">판매할 재료</label><select id="bulkMaterialSelect"></select></div>
+    <div class="field"><label for="bulkMaterialUnit">구매 단위</label><select id="bulkMaterialUnit"><option value="64">1세트 (64개)</option><option value="1728" selected>1셜커 (1,728개)</option></select></div>
+    <div class="field"><label for="bulkMaterialQty">구매 수량</label><input id="bulkMaterialQty" type="number" min="0" step="1" value="1"></div>
+    <div class="field"><label for="bulkMaterialSale">개당 판매 가격</label><input id="bulkMaterialSale" type="number" min="0" step="1" placeholder="판매 가격 입력"></div>
+   </div>
+   <div class="bulk-results" id="bulkMaterialResults" aria-live="polite"></div>
+  </div>
+  <div class="panel bulk-panel hidden" id="bulkRecipePanel">
+   <h3>🍳 요리 가공 판매</h3>
+   <p class="sub">요리를 선택하고 각 재료를 구매할 세트·셜커 수량을 입력하면 제작 가능한 요리 수량과 예상 수익을 계산합니다.</p>
+   <div class="field bulk-recipe-select"><label for="bulkRecipeSelect">제작할 요리</label><select id="bulkRecipeSelect"></select></div>
+   <div class="scroll" style="margin-top:14px"><table class="price-table bulk-ingredient-table"><thead><tr><th>필요 재료</th><th>구매 단위</th><th>구매 수량</th><th>예상 구매 비용</th></tr></thead><tbody id="bulkRecipeRows"></tbody></table></div>
+   <div class="bulk-results" id="bulkRecipeResults" aria-live="polite"></div>
+   <p class="sub bulk-footnote">※ 구매한 재료 전체의 비용을 차감해 계산합니다. 제작 후 남은 재료는 재고로 남으며, 남은 재료의 가치는 순수익에 별도로 더하지 않습니다. 2배 드롭이 적용되는 재료는 가격 관리의 확률을 반영한 예상 원가를 사용합니다.</p>
+  </div>
  </section>
  <section id="prices" class="view hidden">
   <div class="section-head"><div><h2>💰 가격 관리</h2><p>농작물과 기타 요리 재료의 가격·조달 방식을 설정하면 가공 재료 단가와 요리 수익에 자동 반영됩니다.</p></div></div>
@@ -1537,6 +1584,118 @@ $('#clearOverrides').addEventListener('click',()=>{
 });
 $('#resetBtn').addEventListener('click',()=>$('#clearOverrides').click());
 renderPrices();refresh();
+function bulkMaterialOptions(){
+ const crops=cropPacks.map(([name],i)=>({value:'pack:'+i,label:name+' (포대)'}));
+ const items=baseItems.map(it=>({value:'item:'+it.id,label:it.name}));
+ $('#bulkMaterialSelect').innerHTML=[...crops,...items].map(x=>'<option value="'+x.value+'">'+x.label+'</option>').join('');
+ $('#bulkRecipeSelect').innerHTML=recipes.map(r=>'<option value="'+r.id+'">'+r.name+'</option>').join('');
+}
+function bulkUnitCost(key){
+ if(key.startsWith('pack:')){
+  const i=Number(key.slice(5));
+  if(!Number.isInteger(i)||!cropPacks[i])return null;
+  if(cropProcurement(cropPacks[i][0],i)==='직접 채집')return 0;
+  return effectiveCropSetPrice(i)/64;
+ }
+ return itemPrice(key.slice(5));
+}
+function bulkResult(label,value,cls=''){
+ return '<div class="bulk-result '+cls+'"><small>'+label+'</small><strong>'+value+'</strong></div>';
+}
+function renderBulkMaterial(){
+ const key=$('#bulkMaterialSelect').value;
+ const factor=Number($('#bulkMaterialUnit').value)||64;
+ const qty=Math.max(0,Number($('#bulkMaterialQty').value)||0);
+ const saleRaw=$('#bulkMaterialSale').value.trim();
+ const sale=saleRaw===''?null:Math.max(0,Number(saleRaw));
+ const count=qty*factor,costUnit=bulkUnitCost(key);
+ const cost=costUnit==null?null:costUnit*count;
+ const revenue=sale==null?null:sale*count;
+ const profit=cost==null||revenue==null?null:revenue-cost;
+ const fmtBulk=n=>n==null?'가격 확인 필요':Math.round(n).toLocaleString('ko-KR')+'원';
+ $('#bulkMaterialResults').innerHTML=
+  bulkResult('총 구매 수량',Math.round(count).toLocaleString('ko-KR')+'개')+
+  bulkResult('총 구매 비용',fmtBulk(cost))+
+  bulkResult('예상 판매 매출',fmtBulk(revenue))+
+  bulkResult('예상 순수익',fmtBulk(profit),profit==null?'':profit>=0?'profit-result':'loss-result');
+}
+function flattenBulkIngredients(recipe,scale=1,stack=[]){
+ const result={};
+ for(const [key,q] of recipe.ingredients){
+  const amount=q*scale;
+  if(key.startsWith('@')){
+   const nested=recipes.find(r=>r.id===key.slice(1));
+   if(!nested||stack.includes(nested.id))continue;
+   const expanded=flattenBulkIngredients(nested,amount,stack.concat(nested.id));
+   Object.entries(expanded).forEach(([id,n])=>result[id]=(result[id]||0)+n);
+  }else result[key]=(result[key]||0)+amount;
+ }
+ return result;
+}
+function renderBulkRecipeRows(){
+ const recipe=recipes.find(r=>r.id===$('#bulkRecipeSelect').value)||recipes[0];
+ const ingredients=flattenBulkIngredients(recipe,1,[recipe.id]);
+ $('#bulkRecipeRows').innerHTML=Object.entries(ingredients).map(([id,need])=>{
+  const unit=bulkUnitCost('item:'+id);
+  return '<tr><td><b>'+itemName(id)+'</b><div class="sub">요리 1개당 '+need+'개 필요</div></td><td><select data-bulk-unit="'+id+'"><option value="64">세트</option><option value="1728" selected>셜커</option></select></td><td><input type="number" min="0" step="1" value="1" data-bulk-qty="'+id+'" aria-label="'+itemName(id)+' 구매 수량"></td><td data-bulk-cost="'+id+'">'+(unit==null?'가격 미등록':Math.round(unit*1728).toLocaleString('ko-KR')+'원')+'</td></tr>';
+ }).join('');
+ updateBulkRecipe();
+}
+function updateBulkRecipe(){
+ const recipe=recipes.find(r=>r.id===$('#bulkRecipeSelect').value)||recipes[0];
+ const ingredients=flattenBulkIngredients(recipe,1,[recipe.id]);
+ let possible=Infinity,totalCost=0,valid=true,totalBought=0;
+ const details=[];
+ Object.entries(ingredients).forEach(([id,need])=>{
+  const factor=Number(document.querySelector('[data-bulk-unit="'+id+'"]')?.value)||1728;
+  const qty=Math.max(0,Number(document.querySelector('[data-bulk-qty="'+id+'"]')?.value)||0);
+  const amount=qty*factor,unit=bulkUnitCost('item:'+id);
+  const cost=unit==null?null:unit*amount;
+  const possibleByItem=need>0?Math.floor(amount/need):0;
+  possible=Math.min(possible,possibleByItem);
+  totalBought+=amount;
+  if(cost==null)valid=false;else totalCost+=cost;
+  const costCell=document.querySelector('[data-bulk-cost="'+id+'"]');
+  if(costCell)costCell.textContent=cost==null?'가격 미등록':Math.round(cost).toLocaleString('ko-KR')+'원';
+  details.push({id,amount,need,used:possibleByItem*need,left:Math.max(0,amount-possibleByItem*need)});
+ });
+ if(!Number.isFinite(possible))possible=0;
+ const revenue=possible*recipe.sale;
+ const profit=valid?revenue-totalCost:null;
+ const fmtBulk=n=>n==null?'가격 확인 필요':Math.round(n).toLocaleString('ko-KR')+'원';
+ $('#bulkRecipeResults').innerHTML=
+  bulkResult('제작 가능한 요리',possible.toLocaleString('ko-KR')+'개')+
+  bulkResult('총 재료 구매 비용',fmtBulk(valid?totalCost:null))+
+  bulkResult('예상 요리 판매 매출',fmtBulk(revenue))+
+  bulkResult('구매비 차감 후 금액',fmtBulk(profit),profit==null?'':profit>=0?'profit-result':'loss-result');
+ const note=document.querySelector('.bulk-footnote');
+ if(note){
+  const left=details.filter(x=>x.left>0).map(x=>itemName(x.id)+' '+Math.floor(x.left).toLocaleString('ko-KR')+'개').join(' · ');
+  note.textContent='※ 구매한 재료 전체의 비용을 차감해 계산합니다. '+(left?'현재 입력 기준 남는 재료: '+left+'. ':'')+'남은 재료는 재고로 남으며, 그 가치는 순수익에 별도로 더하지 않습니다. 2배 드롭이 적용되는 재료는 가격 관리의 확률을 반영한 예상 원가를 사용합니다.';
+ }
+}
+function switchBulkMode(mode){
+ const material=mode!=='recipe';
+ $('#bulkMaterialPanel').classList.toggle('hidden',!material);
+ $('#bulkRecipePanel').classList.toggle('hidden',material);
+ document.querySelectorAll('.bulk-mode').forEach(b=>b.classList.toggle('active',b.dataset.bulkMode===(material?'material':'recipe')));
+}
+bulkMaterialOptions();
+renderBulkMaterial();
+renderBulkRecipeRows();
+document.addEventListener('click',e=>{
+ const mode=e.target.closest('[data-bulk-mode]');
+ if(mode)switchBulkMode(mode.dataset.bulkMode);
+});
+document.addEventListener('input',e=>{
+ if(e.target.matches('#bulkMaterialQty,#bulkMaterialSale'))renderBulkMaterial();
+ if(e.target.matches('[data-bulk-qty]'))updateBulkRecipe();
+});
+document.addEventListener('change',e=>{
+ if(e.target.matches('#bulkMaterialSelect,#bulkMaterialUnit'))renderBulkMaterial();
+ if(e.target.matches('#bulkRecipeSelect'))renderBulkRecipeRows();
+ if(e.target.matches('[data-bulk-unit]'))updateBulkRecipe();
+});
 const savedTab=location.hash.slice(1)||'dashboard';
 switchTab(savedTab,{updateHistory:false,scroll:false});
 </script>

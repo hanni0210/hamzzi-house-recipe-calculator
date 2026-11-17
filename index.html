@@ -1,25 +1,3 @@
-  <section id="bulk" class="view hidden">
-   <div class="section-head"><div><h2>📦 대량 계산</h2><p>재료를 구매해 어떤 요리를 만드는 것이 가장 이득인지 비교하고, 제작·판매 수익과 남은 재고를 관리합니다.</p></div></div>
-   <div class="callout">1세트는 64개, 1셜커는 1,728개입니다. 요리별 제작 가능 수량은 각 요리만 단독으로 만들었을 때의 최대치이며, 여러 요리의 수량을 합산해 실제 제작 가능 수량으로 보지 않습니다.</div>
-   <div class="panel bulk-panel">
-    <div class="section-head"><div><h3>🧺 재료 구매 및 보유 재고</h3><p class="sub">재료별 조달 방식과 단가, 구매 단위와 수량을 입력한 뒤 저장 버튼을 눌러 재고에 반영하세요.</p></div></div>
-    <div class="scroll"><table class="price-table bulk-ingredient-table"><thead><tr><th>재료</th><th>조달 방식</th><th>구매 단가 (개당)</th><th>구매 단위</th><th>구매 수량</th><th>구매 금액</th><th>현재 보유량</th></tr></thead><tbody id="bulkInventoryRows"></tbody></table></div>
-    <div class="toolbar" style="justify-content:flex-end;margin-top:14px"><button type="button" class="btn btn-primary" id="bulkSavePurchase">구매 수량 저장</button><button type="button" class="btn btn-outline" id="bulkResetStock">보유 재고 초기화</button></div>
-    <p class="sub bulk-footnote" id="bulkInventoryNote">구매 수량은 저장을 눌러 확인한 뒤에만 보유 재고에 더해집니다. 저장된 재고는 브라우저에 보관됩니다.</p>
-   </div>
-   <div class="panel bulk-panel">
-    <h3>🏆 요리 추천 순위</h3><p class="sub">요리 1개당 순수익이 높은 순서입니다. 각 요리는 현재 재고만으로 단독 제작한다고 가정합니다.</p>
-    <div id="bulkRecipeRanking" class="bulk-ranking"></div>
-   </div>
-   <div class="panel bulk-panel hidden" id="bulkRecipeDetail">
-    <div class="section-head"><div><h3 id="bulkDetailTitle">요리 상세 계산</h3><p class="sub" id="bulkDetailSubtitle"></p></div><button type="button" class="btn btn-outline" id="bulkDetailBack">순위로 돌아가기</button></div>
-    <div id="bulkDetailIngredients" class="scroll"></div>
-    <div class="bulk-results" id="bulkDetailResults" aria-live="polite"></div>
-    <div class="form-grid bulk-fields" style="margin-top:14px"><div class="field"><label for="bulkMakeQty">실제 제작 수량</label><input id="bulkMakeQty" type="number" min="1" step="1" value="1"></div></div>
-    <div class="toolbar" style="justify-content:flex-end;margin-top:12px"><button type="button" class="btn btn-primary" id="bulkMakeRecipe">제작하고 재료 차감</button></div>
-    <p class="sub">제작 수량만큼 재료를 실제 보유 재고에서 차감합니다. 남은 재료는 다음 요리 제작에 자동 이월됩니다.</p>
-   </div>
-  </section>
 <!doctype html>
 <html lang="ko">
 <head>

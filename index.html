@@ -1753,7 +1753,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   let max=Infinity,totalCost=0,unpriced=[];
   for(const [id,perRecipe] of Object.entries(needs)){
    const unit=Number(rows.querySelector('.bulk-buy-unit[data-item="'+id+'"]')?.value||1728);
-   const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0));
+   const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0)));
    const available=unit*qty;
    max=Math.min(max,Math.floor(available/perRecipe));
    const price=itemPrice(id);
@@ -1764,7 +1764,7 @@ switchTab(savedTab,{updateHistory:false,scroll:false});
   const profit=revenue-totalCost;
   const remaining=Object.entries(needs).map(([id,perRecipe])=>{
    const unit=Number(rows.querySelector('.bulk-buy-unit[data-item="'+id+'"]')?.value||1728);
-   const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0));
+   const qty=Math.max(0,Math.floor(Number(rows.querySelector('.bulk-buy-qty[data-item="'+id+'"]')?.value||0)));
    return '<tr><td>'+itemName(id)+'</td><td>'+number(unit*qty-max*perRecipe)+'개</td></tr>';
   }).join('');
   results.innerHTML=
